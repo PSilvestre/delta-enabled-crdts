@@ -36,6 +36,7 @@
 #include <string>
 #include <iostream>
 #include <type_traits>
+#include "crdt.pb.h"
 
 using namespace std;
 
@@ -680,6 +681,45 @@ public:
 
 };
 
+template<typename T>
+void dump (delta::crdt& crdt, const int& i)
+{
+  crdt.add_int_payload(i);
+}
+
+template<typename T>
+void dump (delta::crdt& crdt, const string& s)
+{
+  crdt.add_string_payload(s);
+}
+
+template<typename T>
+void dump (delta::crdt& crdt, const set<T>& s)
+{
+  for (const auto& e : s)
+    dump<T>(crdt, e);
+}
+
+template<typename t>
+void load (const delta::crdt& crdt, set<int>& s)
+{
+  for(const auto& e : crdt.int_payload())
+    s.insert(e);
+}
+
+template<typename T>
+void load (const delta::crdt& crdt, set<string>& s)
+{
+  for(const auto& e : crdt.string_payload())
+    s.insert(e);
+}
+
+template<typename T>
+void load (const delta::crdt& crdt, set<T>& s)
+{
+  load<T>(crdt, s);
+}
+
 // template<typename T, typename K=string>
 template<typename T>
 class gset
@@ -724,6 +764,18 @@ public:
   void join (const gset<T>& o)
   {
     s.insert(o.s.begin(), o.s.end());
+  }
+
+  friend void dump (delta::crdt& crdt, const gset<T>& gs)
+  {
+    dump(crdt, gs.s);
+  }
+
+  friend void load (delta::crdt& crdt, gset<T>& gs)
+  {
+    set<T> r;
+    load(crdt, r);
+    gs.s = r; // how to avoid a copy here?
   }
 
 };

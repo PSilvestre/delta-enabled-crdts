@@ -1,0 +1,6 @@
+package delta;
+
+message crdt {
+    repeated int32 int_payload = 1;
+    repeated string string_payload = 2;
+}
