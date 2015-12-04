@@ -1,6 +1,12 @@
 package delta;
 
 message crdt {
-    repeated int32 int_payload = 1;
-    repeated string string_payload = 2;
+  repeated int32 int_payload = 1;
+  repeated string string_payload = 2;
+  repeated cat cat_payload = 3;
+}
+
+message cat {
+  required int32 id = 1;
+  required string name = 2;
 }

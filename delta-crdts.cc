@@ -753,12 +753,12 @@ public:
     return output;            
   }
 
-  gset<T> add (const T& val) 
-  { 
+  gset<T> add (const T& val)
+  {
     gset<T> res;
-    s.insert(val); 
-    res.s.insert(val); 
-    return res; 
+    s.insert(val);
+    res.s.insert(val);
+    return res;
   }
 
   void join (const gset<T>& o)

@@ -37,8 +37,6 @@
 //#define NDEBUG  // Uncoment do stop testing asserts
 #include <assert.h>
 #include "delta-crdts.cc"
-#include <google/protobuf/text_format.h>
-#include "crdt.pb.h"
 
 using namespace std;
 
@@ -905,42 +903,6 @@ void  example_mvreg()
 
 }
 
-void show_crdt(const delta::crdt& crdt)
-{
-  string crdt_str;
-  google::protobuf::TextFormat::PrintToString(crdt, &crdt_str);
-  cout << crdt_str;
-}
-
-void test_dump_and_load()
-{
-  delta::crdt crdt;
-
-  gset<int> gi;
-  gi.add(2);
-  gi.add(4);
-  dump(crdt, gi);
-  show_crdt(crdt);
-
-  gset<int> gi_;
-  load(crdt, gi_);
-  cout << gi_ << endl;
-  // ----- //
-
-  delta::crdt crdt_;
-
-  gset<string> gs;
-  gs.add("abc");
-  gs.add("xyz");
-  dump(crdt_, gs);
-  show_crdt(crdt_);
-
-  gset<string> gs_;
-  load(crdt_, gs_);
-
-  cout << gs_ << endl;
-}
-
 int main(int argc, char * argv[])
 {
   test_gset();
@@ -979,6 +941,5 @@ int main(int argc, char * argv[])
   example_bcounter();
   example_orseq();
   example_mvreg();
-
-  test_dump_and_load();
 }
+
