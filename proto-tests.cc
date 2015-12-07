@@ -3,7 +3,7 @@
 #include "cat.h"
 #include "crdt.pb.h"
 
-void show_crdt(const proto::crdt& crdt)
+void show_crdt_proto(const proto::crdt& crdt)
 {
   cout << "byte size: " << crdt.ByteSize() << endl;
   string crdt_str;
@@ -18,7 +18,7 @@ void test_gset()
   gi.add(2);
   gi.add(4);
   dump(crdt_i, gi);
-  show_crdt(crdt_i);
+  show_crdt_proto(crdt_i);
 
   gset<int> gi_;
   load(crdt_i, gi_);
@@ -30,7 +30,7 @@ void test_gset()
   gs.add("abc");
   gs.add("xyz");
   dump(crdt_s, gs);
-  show_crdt(crdt_s);
+  show_crdt_proto(crdt_s);
 
   gset<string> gs_;
   load(crdt_s, gs_);
@@ -44,7 +44,7 @@ void test_gset()
   gc.add(c0);
   gc.add(c1);
   dump(crdt_c, gc);
-  show_crdt(crdt_c);
+  show_crdt_proto(crdt_c);
 
   gset<cat> gc_;
   load(crdt_c, gc_);
@@ -61,7 +61,7 @@ void test_twopset()
   ts.add("my");
   ts.rmv("my");
   dump(crdt, ts);
-  show_crdt(crdt);
+  show_crdt_proto(crdt);
 
   twopset<string> ts_;
   load(crdt, ts_);
@@ -77,7 +77,7 @@ void test_gcounter()
   o1.inc();
   o1.join(o2.inc(4));
   dump(crdt, o1);
-  show_crdt(crdt);
+  show_crdt_proto(crdt);
 
   gcounter<> o1_;
   load(crdt, o1_);
