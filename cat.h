@@ -8,6 +8,7 @@ class cat {
     string name;
 
   public:
+    cat() {} // empty constructor needed for load when we do "T t"
     cat (int id_, string name_) : id(id_), name(name_) {}
 
     int get_id () const
@@ -41,9 +42,9 @@ void dump (proto::entry& entry, const cat& c)
 }
  
 template<typename t>
-void load (const proto::entry& entry, set<cat>& s)
+void load (const proto::entry& entry, cat& c)
 {
   proto::cat e = entry.e_cat();
-  s.insert(cat(e.id(), e.name()));
+  c = cat(e.id(), e.name());
 }
 

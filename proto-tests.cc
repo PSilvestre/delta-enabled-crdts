@@ -36,7 +36,7 @@ void test_gset()
   load(crdt_s, gs_);
   cout << gs_ << endl;
   cout << "----" << endl;
-/*  
+
   proto::crdt crdt_c;
   gset<cat> gc;
   cat c0(0, "zero");
@@ -50,7 +50,6 @@ void test_gset()
   load(crdt_c, gc_);
   cout << gc_ << endl;
   cout << "----" << endl;
-  */
 }
 
 void test_twopset()
