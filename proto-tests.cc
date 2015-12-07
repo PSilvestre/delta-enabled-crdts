@@ -14,7 +14,6 @@ void show_crdt(const proto::crdt& crdt)
 void test_gset()
 {
   proto::crdt crdt_i;
-
   gset<int> gi;
   gi.add(2);
   gi.add(4);
@@ -27,7 +26,6 @@ void test_gset()
   cout << "----" << endl;
 
   proto::crdt crdt_s;
-
   gset<string> gs;
   gs.add("abc");
   gs.add("xyz");
@@ -38,9 +36,8 @@ void test_gset()
   load(crdt_s, gs_);
   cout << gs_ << endl;
   cout << "----" << endl;
-  
+/*  
   proto::crdt crdt_c;
-
   gset<cat> gc;
   cat c0(0, "zero");
   cat c1(1, "one");
@@ -49,19 +46,44 @@ void test_gset()
   dump(crdt_c, gc);
   show_crdt(crdt_c);
 
-
   gset<cat> gc_;
   load(crdt_c, gc_);
   cout << gc_ << endl;
   cout << "----" << endl;
+  */
 }
 
 void test_twopset()
 {
+  proto::crdt crdt;
+  twopset<string> ts;
+  ts.add("hello");
+  ts.add("world");
+  ts.add("my");
+  ts.rmv("my");
+  dump(crdt, ts);
+  show_crdt(crdt);
+
+  twopset<string> ts_;
+  load(crdt, ts_);
+  cout << ts_ << endl;
+  cout << "----" << endl;
 }
 
 void test_gcounter()
 {
+  proto::crdt crdt;
+  gcounter<> o1("idx");
+  gcounter<> o2("idy");
+  o1.inc();
+  o1.join(o2.inc(4));
+  dump(crdt, o1);
+  show_crdt(crdt);
+
+  gcounter<> o1_;
+  load(crdt, o1_);
+  cout << o1_ << endl;
+  cout << "----" << endl;
 }
 
 int main(int argc, char * argv[])

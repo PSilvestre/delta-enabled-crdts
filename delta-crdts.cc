@@ -136,24 +136,55 @@ void dump (proto::set& ps, const set<T>& s)
   }
 }
 
-template<typename T>
-void load (const proto::entry& entry, set<int>& s)
+template<typename V, typename K>
+void dump(proto::map& pm, const map<K,V>& m)
 {
-  s.insert(entry.e_int());
+  for (const auto& kv : m)
+  {
+    proto::pair *pair = pm.add_pair();
+    proto::entry *key = pair->mutable_key();
+    proto::entry *value = pair->mutable_value();
+    dump<K>(*key, kv.first);
+    dump<V>(*value, kv.second);
+  }
 }
 
 template<typename T>
-void load (const proto::entry& entry, set<string>& s)
+void load (const proto::entry& entry, int& i)
 {
-  s.insert(entry.e_string());
+  i = entry.e_int();
+}
+
+template<typename T>
+void load (const proto::entry& entry, string& s)
+{
+  s = entry.e_string();
 }
 
 template<typename T>
 void load (const proto::set& ps, set<T>& s)
 {
-  for(const auto& e : ps.entry())
-    load<T>(e, s);
+  for(const auto &e : ps.entry())
+  {
+    T t;
+    load<T>(e, t);
+    s.insert(t);
+  }
 }
+
+template<typename V, typename K>
+void load(const proto::map& pm, map<K,V>& m)
+{
+  for(const auto& pair : pm.pair())
+  {
+    K k;
+    V v;
+    load<K>(pair.key(), k);
+    load<V>(pair.value(), v);
+    m[k] = v;
+  }
+}
+
 
 template<typename T> // get a point among two points
 vector<T> among(const vector<T> & l, const vector<T> & r)
@@ -524,8 +555,26 @@ public:
     output << "GCounter: ( ";
     for (const auto& kv : o.m)
       output << kv.first << "->" << kv.second << " ";
-    output << ")";
+    output << ") [" << o.id << "]";
     return output;            
+  }
+
+  friend void dump (proto::crdt& crdt, const gcounter<V,K>& o)
+  {
+    crdt.set_type(proto::crdt::GCOUNTER);
+    proto::gcounter *pgc = crdt.mutable_gcounter();
+    proto::entry *id = pgc->mutable_id();
+    dump<K>(*id, o.id);
+
+    proto::map *m = pgc->mutable_map();
+    dump(*m, o.m);
+  }
+
+  friend void load (proto::crdt& crdt, gcounter<V,K>& o)
+  {
+    load<K>(crdt.gcounter().id(), o.id);
+    o.m.clear();
+    load(crdt.gcounter().map(), o.m);
   }
 
 };
@@ -866,6 +915,26 @@ public:
       if (t.count(os) == 0) s.insert(os);
     }
   }
+
+  friend void dump (proto::crdt& crdt, const twopset<T>& o)
+  {
+    crdt.set_type(proto::crdt::TWOPSET);
+    proto::twopset *pts = crdt.mutable_twopset();
+
+    proto::set *ss = pts->mutable_added();
+    proto::set *st = pts->mutable_removed();
+    dump(*ss, o.s);
+    dump(*st, o.t);
+  }
+
+  friend void load (proto::crdt& crdt, twopset<T>& o)
+  {
+    o.s.clear();
+    o.t.clear();
+    load(crdt.twopset().added(), o.s);
+    load(crdt.twopset().removed(), o.t);
+  }
+
 };
 
 
