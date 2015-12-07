@@ -114,6 +114,47 @@ ostream &operator<<( ostream &output, const set<T>& o)
   return output;
 }
 
+template<typename T>
+void dump (proto::entry& entry, const int& i)
+{
+  entry.set_e_int(i);
+}
+
+template<typename T>
+void dump (proto::entry& entry, const string& s)
+{
+  entry.set_e_string(s);
+}
+
+template<typename T>
+void dump (proto::set& ps, const set<T>& s)
+{
+  for (const auto& e : s)
+  {
+    proto::entry *entry = ps.add_entry();
+    dump<T>(*entry, e);
+  }
+}
+
+template<typename T>
+void load (const proto::entry& entry, set<int>& s)
+{
+  s.insert(entry.e_int());
+}
+
+template<typename T>
+void load (const proto::entry& entry, set<string>& s)
+{
+  s.insert(entry.e_string());
+}
+
+template<typename T>
+void load (const proto::set& ps, set<T>& s)
+{
+  for(const auto& e : ps.entry())
+    load<T>(e, s);
+}
+
 template<typename T> // get a point among two points
 vector<T> among(const vector<T> & l, const vector<T> & r)
 {
@@ -681,45 +722,6 @@ public:
 
 };
 
-template<typename T>
-void dump (delta::crdt& crdt, const int& i)
-{
-  crdt.add_int_payload(i);
-}
-
-template<typename T>
-void dump (delta::crdt& crdt, const string& s)
-{
-  crdt.add_string_payload(s);
-}
-
-template<typename T>
-void dump (delta::crdt& crdt, const set<T>& s)
-{
-  for (const auto& e : s)
-    dump<T>(crdt, e);
-}
-
-template<typename t>
-void load (const delta::crdt& crdt, set<int>& s)
-{
-  for(const auto& e : crdt.int_payload())
-    s.insert(e);
-}
-
-template<typename T>
-void load (const delta::crdt& crdt, set<string>& s)
-{
-  for(const auto& e : crdt.string_payload())
-    s.insert(e);
-}
-
-template<typename T>
-void load (const delta::crdt& crdt, set<T>& s)
-{
-  load<T>(crdt, s);
-}
-
 // template<typename T, typename K=string>
 template<typename T>
 class gset
@@ -766,16 +768,19 @@ public:
     s.insert(o.s.begin(), o.s.end());
   }
 
-  friend void dump (delta::crdt& crdt, const gset<T>& gs)
+  friend void dump (proto::crdt& crdt, const gset<T>& gs)
   {
-    dump(crdt, gs.s);
+    crdt.set_type(proto::crdt::GSET);
+    proto::gset *pgs = crdt.mutable_gset();
+    proto::set *ps = pgs->mutable_added();
+    dump(*ps, gs.s);
   }
 
-  friend void load (delta::crdt& crdt, gset<T>& gs)
+  friend void load (proto::crdt& crdt, gset<T>& gs)
   {
-    set<T> r;
-    load(crdt, r);
-    gs.s = r; // how to avoid a copy here?
+    //if(crdt.type() != proto::crdt::GSET) throw exception?
+    gs.s.clear();
+    load(crdt.gset().added(), gs.s);
   }
 
 };

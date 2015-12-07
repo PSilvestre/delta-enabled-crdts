@@ -3,16 +3,17 @@
 #include "cat.h"
 #include "crdt.pb.h"
 
-void show_crdt(const delta::crdt& crdt)
+void show_crdt(const proto::crdt& crdt)
 {
+  cout << "byte size: " << crdt.ByteSize() << endl;
   string crdt_str;
   google::protobuf::TextFormat::PrintToString(crdt, &crdt_str);
   cout << crdt_str;
 }
 
-void test_dump_and_load()
+void test_gset()
 {
-  delta::crdt crdt_i;
+  proto::crdt crdt_i;
 
   gset<int> gi;
   gi.add(2);
@@ -25,7 +26,7 @@ void test_dump_and_load()
   cout << gi_ << endl;
   cout << "----" << endl;
 
-  delta::crdt crdt_s;
+  proto::crdt crdt_s;
 
   gset<string> gs;
   gs.add("abc");
@@ -38,7 +39,7 @@ void test_dump_and_load()
   cout << gs_ << endl;
   cout << "----" << endl;
   
-  delta::crdt crdt_c;
+  proto::crdt crdt_c;
 
   gset<cat> gc;
   cat c0(0, "zero");
@@ -48,13 +49,24 @@ void test_dump_and_load()
   dump(crdt_c, gc);
   show_crdt(crdt_c);
 
+
   gset<cat> gc_;
   load(crdt_c, gc_);
   cout << gc_ << endl;
   cout << "----" << endl;
 }
 
+void test_twopset()
+{
+}
+
+void test_gcounter()
+{
+}
+
 int main(int argc, char * argv[])
 {
-  test_dump_and_load();
+  test_gset();
+  test_twopset();
+  test_gcounter();
 }

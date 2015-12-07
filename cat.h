@@ -33,17 +33,17 @@ class cat {
 };
 
 template<typename T>
-void dump(delta::crdt& crdt, const cat& c)
+void dump (proto::entry& entry, const cat& c)
 {
-  delta::cat *dcat = crdt.add_cat_payload();
-  dcat->set_id(c.get_id());
-  dcat->set_name(c.get_name());
+  proto::cat *cat = entry.mutable_e_cat();
+  cat->set_id(c.get_id());
+  cat->set_name(c.get_name());
 }
  
 template<typename t>
-void load (const delta::crdt& crdt, set<cat>& s)
+void load (const proto::entry& entry, set<cat>& s)
 {
-  for(const delta::cat& e : crdt.cat_payload())
-    s.insert(cat(e.id(), e.name()));
+  proto::cat e = entry.e_cat();
+  s.insert(cat(e.id(), e.name()));
 }
 

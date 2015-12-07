@@ -1,11 +1,52 @@
-package delta;
+package proto;
 
 message crdt {
-  repeated int32 int_payload = 1;
-  repeated string string_payload = 2;
-  repeated cat cat_payload = 3;
+  enum crdt_type {
+    GSET = 0;
+    TWOPSET = 1;
+    GCOUNTER = 2;
+  }
+
+  required crdt_type type = 1;
+  optional gset gset = 2;
+  optional twopset twopset = 3;
+  optional gcounter gcounter = 4;
 }
 
+message gset {
+  required set added = 1;
+}
+
+message twopset {
+  required set added = 1;
+  required set removed = 2;
+}
+
+message gcounter {
+  required map map = 1;
+  required entry id = 2;
+}
+
+message set {
+  repeated entry entry = 1;
+}
+
+message map {
+  repeated pair pair = 1;
+}
+
+message pair {
+  required entry key = 1;
+  required entry value = 2;
+}
+
+message entry {
+  optional int32 e_int = 1;
+  optional string e_string = 2;
+  optional cat e_cat = 3;
+}
+
+// custom classes:
 message cat {
   required int32 id = 1;
   required string name = 2;
