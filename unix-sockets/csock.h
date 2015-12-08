@@ -50,6 +50,8 @@ class csocket
 
     proto::crdt receive()
     {
+      proto::crdt crdt;
+
       char header_buffer[MAX_HEADER_SIZE];
       int bytes_received = read(socket_fd, header_buffer, MAX_HEADER_SIZE);
       if (bytes_received != MAX_HEADER_SIZE) error("error reading header");
@@ -61,7 +63,7 @@ class csocket
 
       char body_buffer[missing_bytes];
       bytes_received = read(socket_fd, body_buffer, missing_bytes);
-      if (bytes_received != missing_bytes) error("error reading header");
+      if (bytes_received != missing_bytes) error("error reading body");
 
       char message[message_size];
       join(message, header_buffer, body_buffer, missing_bytes);
@@ -70,8 +72,10 @@ class csocket
       CodedInputStream cis(&ais);
       cis.ReadVarint32(&body_size);
 
-      proto::crdt crdt;
+      CodedInputStream::Limit limit = cis.PushLimit(body_size);
       crdt.ParseFromCodedStream(&cis);
+      cis.PopLimit(limit);
+
       return crdt;
     }
 
@@ -84,10 +88,11 @@ class csocket
     uint32_t decode_header(char header_buffer[MAX_HEADER_SIZE])
     {
       uint32_t body_size;
+
       ArrayInputStream ais(header_buffer, MAX_HEADER_SIZE);
       CodedInputStream cis(&ais);
-
       cis.ReadVarint32(&body_size);
+
       return body_size;
     }
 
