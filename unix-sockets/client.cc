@@ -1,5 +1,17 @@
+#include <string>
+#include <thread>
 #include "crdt.pb.h"
 #include "csock.h"
+
+void read_from_socket(csocket& socket)
+{
+  while(true)
+  {
+    proto::crdt crdt;
+    socket.receive(crdt);
+    cout << crdt.text() << endl;
+  }
+}
 
 int main(int argc, char *argv[])
 {
@@ -11,10 +23,16 @@ int main(int argc, char *argv[])
 
   csocket socket = connect_to(argv[1], atoi(argv[2]));
 
-  proto::crdt crdt;
-  crdt.set_text("ok!");
+  thread socket_reader(read_from_socket, ref(socket));
 
-  socket.send(crdt);
+  string line;
+  while(getline(cin, line))
+  {
+    proto::crdt crdt;
+    crdt.set_text(line);
+    socket.send(crdt);
+  }
+
   socket.end();
 
   return 0;

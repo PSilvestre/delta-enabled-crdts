@@ -34,7 +34,8 @@ void receive_updates(int port, twopset<string>& gs, mutex& mtx)
 
   while(true)
   {
-    proto::crdt crdt = other_replica.receive();   
+    proto::crdt crdt;
+    if(!other_replica.receive(crdt)) break;   
     twopset<string> delta;
     load(crdt, delta);
 

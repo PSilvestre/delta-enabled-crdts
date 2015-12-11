@@ -29,6 +29,8 @@ class csocket
   public:
     csocket(int fd) : socket_fd(fd) {}
 
+    int fd() { return socket_fd; }
+
     bool send(const proto::crdt& crdt)
     {
       int body_size = crdt.ByteSize();
@@ -45,12 +47,15 @@ class csocket
       return message_size == bytes_sent;
     }
 
-    proto::crdt receive()
+    bool receive(proto::crdt& crdt)
     {
-      proto::crdt crdt;
-
       char header_buffer[MAX_HEADER_SIZE];
       int bytes_received = read(socket_fd, header_buffer, MAX_HEADER_SIZE);
+
+      if(bytes_received == 0){
+        cout << "client disconnected" << endl;
+        return false;
+      }
       if (bytes_received != MAX_HEADER_SIZE) error("error reading header");
 
       uint32_t body_size = decode_header(header_buffer);
@@ -72,7 +77,7 @@ class csocket
       crdt.ParseFromCodedStream(&cis);
       cis.PopLimit(limit);
 
-      return crdt;
+      return true;
     }
 
     void end() // rename to close
@@ -120,6 +125,8 @@ class csocketserver
 
   public:
     csocketserver(int fd) : socket_fd(fd) {}
+
+    int fd() { return socket_fd; }
 
     csocket accept_one() // rename to accept
     {
