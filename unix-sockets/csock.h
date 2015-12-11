@@ -6,13 +6,9 @@
 #include <netdb.h>      // constains structure "struct hostent" 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "crdt.pb.h"
 
 using namespace std;
-using google::protobuf::io::ArrayOutputStream;
-using google::protobuf::io::ArrayInputStream;
-using google::protobuf::io::CodedOutputStream;
-using google::protobuf::io::CodedInputStream;
+using namespace google::protobuf::io;
 
 const int BACKLOG_QUEUE_SIZE = 128;
 const int MAX_HEADER_SIZE = 4;

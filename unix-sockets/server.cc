@@ -1,7 +1,7 @@
 #include <string>
 #include <iostream>
-#include "csock.h" 
 #include "crdt.pb.h"
+#include "csock.h" 
 
 int main(int argc, char *argv[])
 {
