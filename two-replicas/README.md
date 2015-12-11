@@ -8,13 +8,13 @@ $ make replicas
 
 With two terminals open:
 
-- in the first one:
+- in the __first__ one:
 
 ```bash
 $ ./replica 3333 4444
 ```
 
-- in the second:
+- in the __second__:
 
 ```bash
 $ ./replica 4444 3333
@@ -31,3 +31,24 @@ show
 ```
 
 Then you can start updating your replicas.
+
+Example:
+
+- __first__ replica:
+
+```bash
+add a
+add b
+show
+2PSet: S( a b ) T ( )
+rmv a
+show
+2PSet: S( b ) T ( a )
+```
+
+- __second__ replica:
+
+```bash
+show 
+2PSet: S( b ) T ( a )
+```
