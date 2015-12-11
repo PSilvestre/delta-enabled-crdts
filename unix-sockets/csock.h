@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <unistd.h>
 #include <sys/types.h>
@@ -27,11 +28,10 @@ class csocket
   public:
     csocket(int fd) : socket_fd(fd) {}
 
-    bool send(proto::crdt& crdt)
+    bool send(const proto::crdt& crdt)
     {
       int body_size = crdt.ByteSize();
-      int header_size = CodedOutputStream::VarintSize32(body_size);
-      int message_size = header_size + body_size;
+      int message_size = header_size(body_size) + body_size;
       char write_buffer[message_size];
 
       ArrayOutputStream aos(write_buffer, message_size);
@@ -53,8 +53,7 @@ class csocket
       if (bytes_received != MAX_HEADER_SIZE) error("error reading header");
 
       uint32_t body_size = decode_header(header_buffer);
-      int header_size = CodedOutputStream::VarintSize32(body_size);
-      int message_size = header_size + body_size;
+      int message_size = header_size(body_size) + body_size;
       int missing_bytes = message_size - MAX_HEADER_SIZE;
 
       char body_buffer[missing_bytes];
@@ -81,6 +80,11 @@ class csocket
     }
 
   private:
+    int header_size(const uint32_t& body_size)
+    {
+      return CodedOutputStream::VarintSize32(body_size);
+    }
+
     uint32_t decode_header(char header_buffer[MAX_HEADER_SIZE])
     {
       uint32_t body_size;
