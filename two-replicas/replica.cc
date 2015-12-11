@@ -27,14 +27,6 @@ vector<string> split(const string& s, char delim)
   return elems;
 }
 
-void show_crdt_proto(const proto::crdt& crdt)
-{
-  cout << "byte size: " << crdt.ByteSize() << endl;
-  string crdt_str;
-  google::protobuf::TextFormat::PrintToString(crdt, &crdt_str);
-  cout << crdt_str;
-}
-
 void receive_updates(int port, twopset<string>& gs, mutex& mtx)
 {
   csocketserver socket_server = listen_on(port);
@@ -59,6 +51,11 @@ void send_updates(int port, twopset<string>& tps, mutex& mtx)
 {
   char host[] = "localhost";
   csocket other_replica = connect_to(host, port);
+
+  cout << "Usage:\n";
+  cout << "add [elems]\n";
+  cout << "rmv [elems]\n";
+  cout << "show" << endl;
 
   string line;
   while(getline(cin, line))
