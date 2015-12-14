@@ -37,7 +37,7 @@ void receive_updates(int port, twopset<string>& gs, mutex& mtx)
     proto::crdt crdt;
     if(!other_replica.receive(crdt)) break;   
     twopset<string> delta;
-    load(crdt, delta);
+    crdt >> delta;
 
     mtx.lock();
     gs.join(delta);
@@ -79,7 +79,7 @@ void send_updates(int port, twopset<string>& tps, mutex& mtx)
         mtx.unlock();
 
         proto::crdt crdt;
-        dump(crdt, deltas);
+        crdt << deltas;
         other_replica.send(crdt);
 
       } else if(parts.front() == "show") {

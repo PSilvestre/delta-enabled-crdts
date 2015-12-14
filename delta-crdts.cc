@@ -114,73 +114,76 @@ ostream &operator<<( ostream &output, const set<T>& o)
   return output;
 }
 
-template<typename T>
-void dump (proto::entry& entry, const int& i)
+proto::entry& operator << (proto::entry& entry, const int& i)
 {
   entry.set_e_int(i);
+  return entry;
 }
 
-template<typename T>
-void dump (proto::entry& entry, const string& s)
+proto::entry& operator << (proto::entry& entry, const string& s)
 {
   entry.set_e_string(s);
+  return entry;
 }
 
 template<typename T>
-void dump (proto::set& ps, const set<T>& s)
+proto::set& operator << (proto::set& ps, const set<T>& s)
 {
-  for (const auto& e : s)
-  {
-    proto::entry *entry = ps.add_entry();
-    dump<T>(*entry, e);
-  }
+  for (const auto& e : s) *ps.add_entry() << e;
+  return ps;
 }
 
 template<typename V, typename K>
-void dump(proto::map& pm, const map<K,V>& m)
+proto::map& operator << (proto::map& pm, const map<K,V>& m)
 {
   for (const auto& kv : m)
   {
     proto::pair *pair = pm.add_pair();
-    proto::entry *key = pair->mutable_key();
-    proto::entry *value = pair->mutable_value();
-    dump<K>(*key, kv.first);
-    dump<V>(*value, kv.second);
+    *(pair->mutable_key()) << kv.first;
+    *(pair->mutable_value()) << kv.second;
   }
+
+  return pm;
 }
 
-template<typename T>
-void load (const proto::entry& entry, int& i)
+proto::entry& operator >> (proto::entry& entry, int& i)
 {
   i = entry.e_int();
+  return entry;
 }
 
-template<typename T>
-void load (const proto::entry& entry, string& s)
+proto::entry& operator >> (proto::entry& entry, string& s)
 {
   s = entry.e_string();
+  return entry;
 }
 
 template<typename T>
-void load (const proto::set& ps, set<T>& s)
+proto::set& operator >> (proto::set& ps, set<T>& s)
 {
-  for(const auto &e : ps.entry())
+  for (const auto& e: ps.entry())
   {
+    proto::entry entry = e; // need this because in operator >>, entry cannot be defined as const
+    // how to solve this?
     T t;
-    load<T>(e, t);
+    entry >> t;
     s.insert(t);
   }
+
+  return ps;
 }
 
 template<typename V, typename K>
-void load(const proto::map& pm, map<K,V>& m)
+proto::map& operator >> (proto::map& pm, map<K,V>& m)
 {
   for(const auto& pair : pm.pair())
   {
     K k;
     V v;
-    load<K>(pair.key(), k);
-    load<V>(pair.value(), v);
+    proto::entry key = pair.key();
+    proto::entry value = pair.value();
+    key >> k;
+    value >> v;
     m[k] = v;
   }
 }
@@ -559,22 +562,23 @@ public:
     return output;            
   }
 
-  friend void dump (proto::crdt& crdt, const gcounter<V,K>& o)
+  friend proto::crdt& operator << (proto::crdt& crdt, const gcounter<V,K>& gs)
   {
     crdt.set_type(proto::crdt::GCOUNTER);
     proto::gcounter *pgc = crdt.mutable_gcounter();
-    proto::entry *id = pgc->mutable_id();
-    dump<K>(*id, o.id);
-
-    proto::map *m = pgc->mutable_map();
-    dump(*m, o.m);
+    *(pgc->mutable_id()) << gs.id;
+    *(pgc->mutable_map()) << gs.m;
+    return crdt;
   }
 
-  friend void load (proto::crdt& crdt, gcounter<V,K>& o)
+  friend proto::crdt& operator >> (proto::crdt& crdt, gcounter<V,K>& gc)
   {
-    load<K>(crdt.gcounter().id(), o.id);
-    o.m.clear();
-    load(crdt.gcounter().map(), o.m);
+    gc.m.clear();
+    proto::entry id = crdt.gcounter().id();
+    proto::map map = crdt.gcounter().map();
+    id >> gc.id;
+    map >> gc.m;
+    return crdt;
   }
 
 };
@@ -804,6 +808,23 @@ public:
     return output;            
   }
 
+  friend proto::crdt& operator << (proto::crdt& crdt, const gset<T>& gs)
+  {
+    crdt.set_type(proto::crdt::GSET);
+    proto::gset *pgs = crdt.mutable_gset();
+    *(pgs->mutable_added()) << gs.s;
+    return crdt;
+  }
+
+  friend proto::crdt& operator >> (proto::crdt& crdt, gset<T>& gs)
+  {
+    //if(crdt.type() != proto::crdt::GSET) throw exception?
+    gs.s.clear();
+    proto::set a = crdt.gset().added();
+    a >> gs.s;
+    return crdt;
+  }
+
   gset<T> add (const T& val)
   {
     gset<T> res;
@@ -815,21 +836,6 @@ public:
   void join (const gset<T>& o)
   {
     s.insert(o.s.begin(), o.s.end());
-  }
-
-  friend void dump (proto::crdt& crdt, const gset<T>& gs)
-  {
-    crdt.set_type(proto::crdt::GSET);
-    proto::gset *pgs = crdt.mutable_gset();
-    proto::set *ps = pgs->mutable_added();
-    dump(*ps, gs.s);
-  }
-
-  friend void load (proto::crdt& crdt, gset<T>& gs)
-  {
-    //if(crdt.type() != proto::crdt::GSET) throw exception?
-    gs.s.clear();
-    load(crdt.gset().added(), gs.s);
   }
 
 };
@@ -868,6 +874,26 @@ public:
   { 
     output << "2PSet: S" << o.s << " T " << o.t;
     return output;            
+  }
+
+  friend proto::crdt& operator << (proto::crdt& crdt, const twopset<T>& gs)
+  {
+    crdt.set_type(proto::crdt::TWOPSET);
+    proto::twopset *pts = crdt.mutable_twopset();
+    *(pts->mutable_added()) << gs.s;
+    *(pts->mutable_removed()) << gs.t;
+    return crdt;
+  }
+
+  friend proto::crdt& operator >> (proto::crdt& crdt, twopset<T>& tps)
+  {
+    tps.s.clear();
+    tps.t.clear();
+    proto::set a = crdt.twopset().added();
+    proto::set r = crdt.twopset().removed();
+    a >> tps.s;
+    r >> tps.t;
+    return crdt;
   }
 
   twopset<T> add (const T& val) 
@@ -914,25 +940,6 @@ public:
     {
       if (t.count(os) == 0) s.insert(os);
     }
-  }
-
-  friend void dump (proto::crdt& crdt, const twopset<T>& o)
-  {
-    crdt.set_type(proto::crdt::TWOPSET);
-    proto::twopset *pts = crdt.mutable_twopset();
-
-    proto::set *ss = pts->mutable_added();
-    proto::set *st = pts->mutable_removed();
-    dump(*ss, o.s);
-    dump(*st, o.t);
-  }
-
-  friend void load (proto::crdt& crdt, twopset<T>& o)
-  {
-    o.s.clear();
-    o.t.clear();
-    load(crdt.twopset().added(), o.s);
-    load(crdt.twopset().removed(), o.t);
   }
 
 };

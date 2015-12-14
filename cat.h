@@ -33,18 +33,18 @@ class cat {
     }
 };
 
-template<typename T>
-void dump (proto::entry& entry, const cat& c)
+proto::entry& operator << (proto::entry& entry, const cat& c)
 {
   proto::cat *cat = entry.mutable_e_cat();
   cat->set_id(c.get_id());
   cat->set_name(c.get_name());
+  return entry;
 }
- 
-template<typename t>
-void load (const proto::entry& entry, cat& c)
+
+proto::entry& operator >> (proto::entry& entry, cat& c)
 {
   proto::cat e = entry.e_cat();
   c = cat(e.id(), e.name());
+  return entry;
 }
 
