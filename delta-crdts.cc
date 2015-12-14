@@ -878,7 +878,7 @@ public:
     return crdt;
   }
 
-  friend proto::crdt& operator >> (proto::crdt& crdt, twopset<T>& tps)
+  friend const proto::crdt& operator >> (const proto::crdt& crdt, twopset<T>& tps)
   {
     tps.s.clear();
     tps.t.clear();
