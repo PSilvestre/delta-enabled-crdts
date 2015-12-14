@@ -146,27 +146,25 @@ proto::map& operator << (proto::map& pm, const map<K,V>& m)
   return pm;
 }
 
-proto::entry& operator >> (proto::entry& entry, int& i)
+const proto::entry& operator >> (const proto::entry& entry, int& i)
 {
   i = entry.e_int();
   return entry;
 }
 
-proto::entry& operator >> (proto::entry& entry, string& s)
+const proto::entry& operator >> (const proto::entry& entry, string& s)
 {
   s = entry.e_string();
   return entry;
 }
 
 template<typename T>
-proto::set& operator >> (proto::set& ps, set<T>& s)
+const proto::set& operator >> (const proto::set& ps, set<T>& s)
 {
-  for (const auto& e: ps.entry())
+  for (const auto& e : ps.entry())
   {
-    proto::entry entry = e; // need this because in operator >>, entry cannot be defined as const
-    // how to solve this?
     T t;
-    entry >> t;
+    e >> t;
     s.insert(t);
   }
 
@@ -174,16 +172,14 @@ proto::set& operator >> (proto::set& ps, set<T>& s)
 }
 
 template<typename V, typename K>
-proto::map& operator >> (proto::map& pm, map<K,V>& m)
+const proto::map& operator >> (const proto::map& pm, map<K,V>& m)
 {
-  for(const auto& pair : pm.pair())
+  for (const auto& pair : pm.pair())
   {
     K k;
     V v;
-    proto::entry key = pair.key();
-    proto::entry value = pair.value();
-    key >> k;
-    value >> v;
+    pair.key() >> k;
+    pair.value()  >> v;
     m[k] = v;
   }
 }
@@ -562,22 +558,20 @@ public:
     return output;            
   }
 
-  friend proto::crdt& operator << (proto::crdt& crdt, const gcounter<V,K>& gs)
+  friend proto::crdt& operator << (proto::crdt& crdt, const gcounter<V,K>& gc)
   {
     crdt.set_type(proto::crdt::GCOUNTER);
     proto::gcounter *pgc = crdt.mutable_gcounter();
-    *(pgc->mutable_id()) << gs.id;
-    *(pgc->mutable_map()) << gs.m;
+    *(pgc->mutable_id()) << gc.id;
+    *(pgc->mutable_map()) << gc.m;
     return crdt;
   }
 
-  friend proto::crdt& operator >> (proto::crdt& crdt, gcounter<V,K>& gc)
+  friend const proto::crdt& operator >> (const proto::crdt& crdt, gcounter<V,K>& gc)
   {
     gc.m.clear();
-    proto::entry id = crdt.gcounter().id();
-    proto::map map = crdt.gcounter().map();
-    id >> gc.id;
-    map >> gc.m;
+    crdt.gcounter().id() >> gc.id;
+    crdt.gcounter().map() >> gc.m;
     return crdt;
   }
 
@@ -816,12 +810,11 @@ public:
     return crdt;
   }
 
-  friend proto::crdt& operator >> (proto::crdt& crdt, gset<T>& gs)
+  friend const proto::crdt& operator >> (const proto::crdt& crdt, gset<T>& gs)
   {
     //if(crdt.type() != proto::crdt::GSET) throw exception?
     gs.s.clear();
-    proto::set a = crdt.gset().added();
-    a >> gs.s;
+    crdt.gset().added() >> gs.s;
     return crdt;
   }
 
@@ -889,10 +882,8 @@ public:
   {
     tps.s.clear();
     tps.t.clear();
-    proto::set a = crdt.twopset().added();
-    proto::set r = crdt.twopset().removed();
-    a >> tps.s;
-    r >> tps.t;
+    crdt.twopset().added() >> tps.s;
+    crdt.twopset().removed() >> tps.t;
     return crdt;
   }
 

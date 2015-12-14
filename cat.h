@@ -41,7 +41,7 @@ proto::entry& operator << (proto::entry& entry, const cat& c)
   return entry;
 }
 
-proto::entry& operator >> (proto::entry& entry, cat& c)
+const proto::entry& operator >> (const proto::entry& entry, cat& c)
 {
   proto::cat e = entry.e_cat();
   c = cat(e.id(), e.name());
