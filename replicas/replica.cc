@@ -50,10 +50,16 @@ void receive_updates(int port, twopset<string>& gs, mutex& mtx)
   socket_server.end();
 }
 
-void send_updates(int port, twopset<string>& tps, mutex& mtx)
+void send_updates(vector<int> other_replicas_ports, twopset<string>& tps, mutex& mtx)
 {
   char host[] = "localhost";
-  csocket other_replica = connect_to(host, port);
+  vector<csocket> other_replicas;
+
+  for(const auto& port : other_replicas_ports)
+  {
+    csocket other_replica = connect_to(host, port);
+    other_replicas.push_back(other_replica);
+  }
 
   cout << "Usage:\n";
   cout << "add [elems]\n";
@@ -82,7 +88,7 @@ void send_updates(int port, twopset<string>& tps, mutex& mtx)
 
         proto::crdt crdt;
         crdt << deltas;
-        other_replica.send(crdt);
+        for(auto& other_replica : other_replicas) other_replica.send(crdt);
 
       } else if(parts.front() == "show") {
         mtx.lock(); // is this needed?
@@ -94,23 +100,26 @@ void send_updates(int port, twopset<string>& tps, mutex& mtx)
     }
   }
 
-  other_replica.end();
+  for (auto& other_replica : other_replicas) other_replica.end();
 }
 
 int main(int argc, char *argv[])
 {
   if (argc < 3)
   {
-    fprintf(stderr, "Usage: %s PORT OTHER_REPLICA_PORT\n", argv[0]);
+    fprintf(stderr, "Usage: %s PORT [OTHER_REPLICA_PORT]\n", argv[0]);
     exit(1);
   }
 
   twopset<string> gs;
   mutex mtx;
+  vector<int> other_replicas_ports;
+
+  for(int i = 2; i < argc; i++) other_replicas_ports.push_back(atoi(argv[i]));
 
   thread reader(receive_updates, atoi(argv[1]), std::ref(gs), std::ref(mtx));
   sleep(5);
-  thread writer(send_updates, atoi(argv[2]), std::ref(gs), std::ref(mtx));
+  thread writer(send_updates, other_replicas_ports, std::ref(gs), std::ref(mtx));
 
   reader.join();
   writer.join();
