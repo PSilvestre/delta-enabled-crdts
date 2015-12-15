@@ -28,6 +28,8 @@ int main(int argc, char *argv[])
   while(getline(cin, line))
   {
     proto::message message;
+    message.set_id(0); // required in anti-entropy algorithm
+    message.set_seq(0); // same
     message.set_type(proto::message::CHAT);
     message.set_text(line);
     socket.send(message);

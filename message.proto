@@ -10,16 +10,14 @@ message message {
   }
 
   required message_type type = 1;
-  optional ack ack = 2;
-  optional gset gset = 3;
-  optional twopset twopset = 4;
-  optional gcounter gcounter = 5;
+  required uint32 id = 2;
+  required uint32 seq = 3;
+
+  optional gset gset = 4;
+  optional twopset twopset = 5;
+  optional gcounter gcounter = 6;
 
   optional string text = 100; // same
-}
-
-message ack {
-  required uint32 n = 1;
 }
 
 message gset {

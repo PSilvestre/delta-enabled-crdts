@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <thread>
+#include <random>
 #include <google/protobuf/text_format.h>
 #include "../unix-sockets/csock.h"
 #include "../delta-crdts.cc"
@@ -27,40 +28,60 @@ vector<string> split(const string& s, char delim)
   return elems;
 }
 
-void receive_updates(int port, twopset<string>& tps, mutex& mtx)
+void socket_reader(int my_id, int port, twopset<string>& tps, int& seq, map<int, twopset<string>>& deltas, map<int, int>& acks, mutex& mtx)
 {
   csocketserver socket_server = listen_on(port);
 
   while(true)
   {
-    vector<proto::message> new_messages;
+    map<int, proto::message> new_messages;
     socket_server.act(new_messages);
 
-    mtx.lock();
-    for(const auto& new_message : new_messages)
+    if(!new_messages.empty())
     {
-      twopset<string> delta;
-      new_message >> delta;
+      map<int, proto::message> acks_later;
 
-      tps.join(delta);
+      mtx.lock();
+      for(const auto& kv : new_messages)
+      {
+        proto::message new_message = kv.second;
+
+        if(new_message.type() == proto::message::ACK)
+        {
+          int id = new_message.id();
+          int max;
+          if(acks.count(id) > 0 && acks.at(id) > new_message.seq()) max = acks.at(id);
+          else max = new_message.seq();
+
+          acks[id] = max;
+        }
+        else
+        {
+          twopset<string> delta;
+          new_message >> delta;
+
+          tps.join(delta);
+          deltas[seq++] = delta;
+
+          proto::message ack;
+          ack.set_type(proto::message::ACK);
+          ack.set_id(my_id);
+          ack.set_seq(new_message.seq());
+          acks_later[kv.first] = ack;
+        }
+      }
+      mtx.unlock();
+      
+      for(auto& kv : acks_later)
+        socket_server.send_to(kv.first, kv.second);
     }
-    mtx.unlock();
   }
 
   socket_server.end();
 }
 
-void send_updates(vector<int> other_replicas_ports, twopset<string>& tps, mutex& mtx)
+void keyboard_reader(twopset<string>& tps, int& seq, map<int, twopset<string>>& deltas, mutex& mtx)
 {
-  char host[] = "localhost";
-  vector<csocket> other_replicas;
-
-  for(const auto& port : other_replicas_ports)
-  {
-    csocket other_replica = connect_to(host, port);
-    other_replicas.push_back(other_replica);
-  }
-
   cout << "Usage:\n";
   cout << "add [elems]\n";
   cout << "rmv [elems]\n";
@@ -72,58 +93,116 @@ void send_updates(vector<int> other_replicas_ports, twopset<string>& tps, mutex&
     vector<string> parts = split(line, ' ');
     if(!parts.empty()) {
       if(parts.front() == "add" || parts.front() == "rmv") {
-        twopset<string> deltas;
+        twopset<string> delta;
 
         mtx.lock();
         for(int i = 1; i < parts.size(); i++)
         {
-          twopset<string> delta;
+          string elem = parts.at(i);
 
-          if(parts.front() == "add") delta = tps.add(parts.at(i));
-          else delta = tps.rmv(parts.at(i));
-
-          deltas.join(delta);
+          if(parts.front() == "add") 
+            delta.join(tps.add(elem));
+          else 
+            delta.join(tps.rmv(elem));
         }
-        mtx.unlock();
 
-        proto::message message;
-        message << deltas;
-        for(auto& other_replica : other_replicas) other_replica.send(message);
+        deltas[seq++] = delta;
+        mtx.unlock();
 
       } else if(parts.front() == "show") {
-        mtx.lock(); // is this needed?
+        // is mtx.lock() needed?
         cout << tps << endl;
-        mtx.unlock();
       } else {
         cout << "Unrecognized option" << endl;
       }
     }
   }
+}
 
-  for (auto& other_replica : other_replicas) other_replica.end();
+void gossip(int my_id, vector<csocket>& other_replicas, int& seq, map<int, twopset<string>>& deltas, map<int, int>& acks, mutex& mtx)
+{
+  sleep(10);
+  random_device rd;
+  default_random_engine e(rd());
+  uniform_int_distribution<int> dist(0, other_replicas.size() - 1);
+  int index = dist(e);
+  cout << "will gossip to " << index << endl; 
+  
+  mtx.lock();
+  twopset<string> delta_group;
+  // this is wrong
+  for(auto& kv : deltas) delta_group.join(kv.second);
+  mtx.unlock();
+
+  proto::message message;
+  message << delta_group;
+  message.set_id(my_id);
+  message.set_seq(seq);
+  other_replicas.at(index).send(message);
+
+  gossip(my_id, other_replicas, seq, deltas, acks, mtx);
 }
 
 int main(int argc, char *argv[])
 {
-  if (argc < 3)
+  if (argc < 4)
   {
-    fprintf(stderr, "Usage: %s PORT [OTHER_REPLICAS_PORT]\n", argv[0]);
+    fprintf(stderr, "Usage: %s UNIQUE_ID PORT [OTHER_REPLICAS_PORT]\n", argv[0]);
     exit(1);
   }
 
-  twopset<string> gs;
+  twopset<string> tps;
+  int seq = 0;
+  map<int, twopset<string>> deltas; // seq -> delta
+  map<int, int> acks; // unique-id -> ack
   mutex mtx;
-  int port = atoi(argv[1]);
-  vector<int> other_replicas_ports;
 
-  for(int i = 2; i < argc; i++) other_replicas_ports.push_back(atoi(argv[i]));
+  char host[] = "localhost";
+  int id = atoi(argv[1]);
+  int port = atoi(argv[2]);
+  vector<csocket> other_replicas;
 
-  thread reader(receive_updates, port, std::ref(gs), std::ref(mtx));
+  thread sr(
+      socket_reader, 
+      id,
+      port, 
+      std::ref(tps), 
+      std::ref(seq), 
+      std::ref(deltas), 
+      std::ref(acks),
+      std::ref(mtx)
+  );
   sleep(5);
-  thread writer(send_updates, other_replicas_ports, std::ref(gs), std::ref(mtx));
 
-  reader.join();
-  writer.join();
+  for(int i = 3; i < argc; i++) 
+  {
+    int replica_port = atoi(argv[i]);
+    csocket other_replica = connect_to(host, replica_port);
+    other_replicas.push_back(other_replica);
+  }
 
+  thread kr(
+      keyboard_reader, 
+      std::ref(tps), 
+      std::ref(seq), 
+      std::ref(deltas), 
+      std::ref(mtx)
+  );
+
+  thread gossiper(
+      gossip,
+      id,
+      std::ref(other_replicas),
+      std::ref(seq),
+      std::ref(deltas),
+      std::ref(acks),
+      std::ref(mtx)
+  );
+
+  sr.join();
+  kr.join();
+  gossiper.join();
+
+  for (auto& other_replica : other_replicas) other_replica.end();
   return 0;
 }

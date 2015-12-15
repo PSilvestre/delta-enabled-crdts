@@ -156,9 +156,9 @@ class csocketserver
      * This method accepts new clients or receives new messages
      * using select system call
      *
-     * if there are new messages, they will be added to vector "new_messages"
+     * if there are new messages, they will be added to map "new_messages": fd -> message
      */
-    void act(vector<proto::message>& new_messages)
+    void act(map<int, proto::message>& new_messages)
     {
       read_fd_set = active_fd_set;
 
@@ -172,7 +172,6 @@ class csocketserver
 
       for (int i = 0; i < FD_SETSIZE; i++)
       {
-        cout << "FD_SETSIZE: " << FD_SETSIZE << endl;
         if (FD_ISSET(i, &read_fd_set))
         {
           if( i == socket_fd)
@@ -186,7 +185,7 @@ class csocketserver
             proto::message message;
             bool success = clients.at(i).receive(message);
 
-            if (success) new_messages.push_back(message);
+            if (success) new_messages.emplace(i, message);
             else
             {
               csocket dead_client = clients.at(i);
