@@ -17,7 +17,6 @@ proto-tests: crdt-proto proto-tests.cc
 chat: crdt-proto unix-sockets/client.cc unix-sockets/server.cc
 	$(CC) $(FLAGS) unix-sockets/client.cc crdt.pb.o -o client $(PB_LIBS)
 	$(CC) $(FLAGS) unix-sockets/server.cc crdt.pb.o -o server $(PB_LIBS)
-	echo "use with care: empty messages bug is on!!!"
 
 replicas: crdt-proto two-replicas/replica.cc
 	$(CC) $(FLAGS) two-replicas/replica.cc crdt.pb.o -o replica $(PB_LIBS)

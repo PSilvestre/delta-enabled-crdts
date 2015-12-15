@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <map>
+#include <vector>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -122,9 +124,15 @@ class csocketserver
 {
   private:
     int socket_fd;
+    fd_set active_fd_set;
+    fd_set read_fd_set;
+    map<int, csocket> clients;
 
   public:
-    csocketserver(int fd) : socket_fd(fd) {}
+    csocketserver(int fd) : socket_fd(fd) {
+      FD_ZERO(&active_fd_set);
+      FD_SET(fd, &active_fd_set);
+    }
 
     int fd() { return socket_fd; }
 
@@ -144,8 +152,59 @@ class csocketserver
       return socket;
     }
 
+    /**
+     * This method accepts new clients or processes new messages
+     * using select system call
+     */
+    void act(void (*process_message)(proto::crdt&, csocketserver&))
+    {
+      read_fd_set = active_fd_set;
+
+      int select_result = select(
+          FD_SETSIZE,
+          &read_fd_set,
+          NULL, NULL, NULL
+      );  
+
+      if (select_result < 0) error("error on select");
+
+      for (int i = 0; i < FD_SETSIZE; i++)
+      {
+        if (FD_ISSET(i, &read_fd_set))
+        {
+          if( i == socket_fd)
+          {
+            csocket client = accept_one();
+            FD_SET(client.fd(), &active_fd_set);
+            clients.emplace(client.fd(), client);
+          }
+          else
+          {
+            proto::crdt crdt;
+            bool success = clients.at(i).receive(crdt);
+
+            if (!success)
+            {
+              csocket dead_client = clients.at(i);
+              dead_client.end();
+              FD_CLR(dead_client.fd(), &active_fd_set);
+              clients.erase(dead_client.fd());
+            } else (*process_message)(crdt, *this);
+          } 
+        }
+      }
+    }
+
+    vector<csocket> connected()
+    { 
+      vector<csocket> result;
+      for (const auto& kv : clients) result.push_back(kv.second);
+      return result;
+    }
+
     void end() // rename to close
     {
+      for(auto& kv : clients) kv.second.end();
       close(socket_fd);
     }
 };

@@ -3,13 +3,6 @@
 #include "cat.h"
 #include "crdt.pb.h"
 
-/*
-proto::entry& operator << (proto::entry& entry, const int& i)
-{
-  entry.set_e_int(i);
-  return entry;
-}
-*/
 void show_crdt_proto(const proto::crdt& crdt)
 {
   cout << "byte size: " << crdt.ByteSize() << endl;
