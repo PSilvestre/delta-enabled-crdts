@@ -128,14 +128,6 @@ void gossip(int my_id, map<int, csocket>& replicas, int& seq, map<int, twopset<s
   gossip(my_id, replicas, seq, deltas, acks, mtx);
 }
 
-void id_and_port(char arg[], int& id, int& port)
-{
-  string s(arg);
-  vector<string> v = util::split(s, ':');
-  id = atoi(v.at(0).c_str());
-  port = atoi(v.at(1).c_str());
-}
-
 int main(int argc, char *argv[])
 {
   if (argc < 3)
@@ -153,7 +145,7 @@ int main(int argc, char *argv[])
   char host[] = "localhost";
   int id;
   int port;
-  id_and_port(argv[1], id, port);
+  util::id_and_port(argv[1], id, port);
   map<int, csocket> replicas; // unique-id -> socket
 
   thread sr(
@@ -172,7 +164,7 @@ int main(int argc, char *argv[])
   {
     int replica_id;
     int replica_port;
-    id_and_port(argv[i], replica_id, replica_port);
+    util::id_and_port(argv[i], replica_id, replica_port);
     csocket replica = connect_to(host, replica_port);
     replicas.emplace(replica_id, replica);
   }

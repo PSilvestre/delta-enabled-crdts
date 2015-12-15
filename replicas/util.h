@@ -25,6 +25,14 @@ namespace util {
     return elems;
   }
 
+  void id_and_port(char arg[], int& id, int& port)
+  {
+    string s(arg);
+    vector<string> v = util::split(s, ':');
+    id = atoi(v.at(0).c_str());
+    port = atoi(v.at(1).c_str());
+  }
+
   int random_replica_id(map<int, csocket>& replicas)
   {
     random_device rd;
