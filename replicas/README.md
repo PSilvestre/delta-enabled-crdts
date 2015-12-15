@@ -8,7 +8,7 @@ $ make replicas
 
 __Usage:__ 
 ```bash
-$ ./replica PORT [OTHER_REPLICAS_PORT]
+$ ./replica UNIQUE_ID:PORT [UNIQUE_ID:OTHER_REPLICAS_PORT]
 ```
 
 ## Example with two replicas
@@ -18,13 +18,13 @@ With two terminals open:
 - in the __first__ one:
 
 ```bash
-$ ./replica 3333 4444
+$ ./replica 1:3333 2:4444
 ```
 
 - in the __second__:
 
 ```bash
-$ ./replica 4444 3333
+$ ./replica 2:4444 1:3333
 ```
 
 After starting the first replica, you have 5 seconds to start the second one.

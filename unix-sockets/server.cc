@@ -12,11 +12,11 @@ int main(int argc, char *argv[])
 
   while(true)
   {
-    vector<proto::message> new_messages;
+    map<int, proto::message> new_messages;
     socket_server.act(new_messages);
 
-    for(const auto& new_message : new_messages)
-      for(auto& client : socket_server.connected()) client.send(new_message);
+    for(const auto& kv : new_messages)
+      for(auto& client : socket_server.connected()) client.send(kv.second);
   }
 
   socket_server.end();

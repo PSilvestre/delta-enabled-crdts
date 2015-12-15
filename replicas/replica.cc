@@ -1,32 +1,10 @@
-#include <string>
-#include <sstream>
-#include <vector>
 #include <mutex>
 #include <thread>
-#include <random>
 #include <google/protobuf/text_format.h>
-#include "../unix-sockets/csock.h"
+#include "util.h"
 #include "../delta-crdts.cc"
 
 using namespace std;
-
-// string split
-// http://stackoverflow.com/a/236803/4262469
-vector<string>& split(const string& s, char delim, vector<string>& elems)
-{
-  stringstream ss(s);
-  string item;
-
-  while(getline(ss, item, delim)) elems.push_back(item);
-  return elems;
-}
-
-vector<string> split(const string& s, char delim)
-{
-  vector<string> elems;
-  split(s, delim, elems);
-  return elems;
-}
 
 void socket_reader(int my_id, int port, twopset<string>& tps, int& seq, map<int, twopset<string>>& deltas, map<int, int>& acks, mutex& mtx)
 {
@@ -90,7 +68,7 @@ void keyboard_reader(twopset<string>& tps, int& seq, map<int, twopset<string>>& 
   string line;
   while(getline(cin, line))
   {
-    vector<string> parts = split(line, ' ');
+    vector<string> parts = util::split(line, ' ');
     if(!parts.empty()) {
       if(parts.front() == "add" || parts.front() == "rmv") {
         twopset<string> delta;
@@ -119,35 +97,50 @@ void keyboard_reader(twopset<string>& tps, int& seq, map<int, twopset<string>>& 
   }
 }
 
-void gossip(int my_id, vector<csocket>& other_replicas, int& seq, map<int, twopset<string>>& deltas, map<int, int>& acks, mutex& mtx)
+void gossip(int my_id, map<int, csocket>& replicas, int& seq, map<int, twopset<string>>& deltas, map<int, int>& acks, mutex& mtx)
 {
   sleep(10);
-  random_device rd;
-  default_random_engine e(rd());
-  uniform_int_distribution<int> dist(0, other_replicas.size() - 1);
-  int index = dist(e);
-  cout << "will gossip to " << index << endl; 
+  
+  int replica_id = util::random_replica_id(replicas);
+  cout << "will gossip to " << replica_id << endl; 
   
   mtx.lock();
   twopset<string> delta_group;
-  // this is wrong
-  for(auto& kv : deltas) delta_group.join(kv.second);
+  int last_ack = acks.count(replica_id) > 0 
+    ? acks.at(replica_id)
+    : 0;
+  
+  for (int l = last_ack; l < seq; l++)
+    delta_group.join(deltas.at(l));
+  
+  bool should_gossip = last_ack < seq;
   mtx.unlock();
+ 
+  if(should_gossip)
+  { 
+    proto::message message;
+    message << delta_group;
+    message.set_id(my_id);
+    message.set_seq(seq);
+    replicas.at(replica_id).send(message);
+  }
 
-  proto::message message;
-  message << delta_group;
-  message.set_id(my_id);
-  message.set_seq(seq);
-  other_replicas.at(index).send(message);
+  gossip(my_id, replicas, seq, deltas, acks, mtx);
+}
 
-  gossip(my_id, other_replicas, seq, deltas, acks, mtx);
+void id_and_port(char arg[], int& id, int& port)
+{
+  string s(arg);
+  vector<string> v = util::split(s, ':');
+  id = atoi(v.at(0).c_str());
+  port = atoi(v.at(1).c_str());
 }
 
 int main(int argc, char *argv[])
 {
-  if (argc < 4)
+  if (argc < 3)
   {
-    fprintf(stderr, "Usage: %s UNIQUE_ID PORT [OTHER_REPLICAS_PORT]\n", argv[0]);
+    fprintf(stderr, "Usage: %s UNIQUE_ID:PORT [UNIQUE_ID:OTHER_REPLICAS_PORT]\n", argv[0]);
     exit(1);
   }
 
@@ -158,9 +151,10 @@ int main(int argc, char *argv[])
   mutex mtx;
 
   char host[] = "localhost";
-  int id = atoi(argv[1]);
-  int port = atoi(argv[2]);
-  vector<csocket> other_replicas;
+  int id;
+  int port;
+  id_and_port(argv[1], id, port);
+  map<int, csocket> replicas; // unique-id -> socket
 
   thread sr(
       socket_reader, 
@@ -174,11 +168,13 @@ int main(int argc, char *argv[])
   );
   sleep(5);
 
-  for(int i = 3; i < argc; i++) 
+  for(int i = 2; i < argc; i++) 
   {
-    int replica_port = atoi(argv[i]);
-    csocket other_replica = connect_to(host, replica_port);
-    other_replicas.push_back(other_replica);
+    int replica_id;
+    int replica_port;
+    id_and_port(argv[i], replica_id, replica_port);
+    csocket replica = connect_to(host, replica_port);
+    replicas.emplace(replica_id, replica);
   }
 
   thread kr(
@@ -189,10 +185,10 @@ int main(int argc, char *argv[])
       std::ref(mtx)
   );
 
-  thread gossiper(
+  thread g(
       gossip,
       id,
-      std::ref(other_replicas),
+      std::ref(replicas),
       std::ref(seq),
       std::ref(deltas),
       std::ref(acks),
@@ -201,8 +197,8 @@ int main(int argc, char *argv[])
 
   sr.join();
   kr.join();
-  gossiper.join();
+  g.join();
 
-  for (auto& other_replica : other_replicas) other_replica.end();
+  for (auto& kv : replicas) kv.second.end();
   return 0;
 }
