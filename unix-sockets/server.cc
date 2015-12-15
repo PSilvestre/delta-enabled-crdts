@@ -1,10 +1,4 @@
-#include <map>
 #include "csock.h" 
-
-void process_message(proto::crdt& crdt, csocketserver& socket_server)
-{
-  for (auto& client : socket_server.connected()) client.send(crdt);  
-}
 
 int main(int argc, char *argv[])
 {
@@ -18,7 +12,11 @@ int main(int argc, char *argv[])
 
   while(true)
   {
-    socket_server.act(process_message);
+    vector<proto::crdt> new_messages;
+    socket_server.act(new_messages);
+
+    for(const auto& new_message : new_messages)
+      for(auto& client : socket_server.connected()) client.send(new_message);
   }
 
   socket_server.end();

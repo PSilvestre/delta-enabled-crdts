@@ -30,21 +30,23 @@ vector<string> split(const string& s, char delim)
 void receive_updates(int port, twopset<string>& gs, mutex& mtx)
 {
   csocketserver socket_server = listen_on(port);
-  csocket other_replica = socket_server.accept_one();
 
   while(true)
   {
-    proto::crdt crdt;
-    if(!other_replica.receive(crdt)) break;   
-    twopset<string> delta;
-    crdt >> delta;
+    vector<proto::crdt> new_messages;
+    socket_server.act(new_messages);
 
     mtx.lock();
-    gs.join(delta);
+    for(const auto& new_message : new_messages)
+    {
+      twopset<string> delta;
+      new_message >> delta;
+
+      gs.join(delta);
+    }
     mtx.unlock();
   }
 
-  other_replica.end();
   socket_server.end();
 }
 

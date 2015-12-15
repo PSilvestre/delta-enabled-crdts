@@ -153,10 +153,12 @@ class csocketserver
     }
 
     /**
-     * This method accepts new clients or processes new messages
+     * This method accepts new clients or receives new messages
      * using select system call
+     *
+     * if there are new messages, they will be added to vector "new_messages"
      */
-    void act(void (*process_message)(proto::crdt&, csocketserver&))
+    void act(vector<proto::crdt>& new_messages)
     {
       read_fd_set = active_fd_set;
 
@@ -183,13 +185,14 @@ class csocketserver
             proto::crdt crdt;
             bool success = clients.at(i).receive(crdt);
 
-            if (!success)
+            if (success) new_messages.push_back(crdt);
+            else
             {
               csocket dead_client = clients.at(i);
               dead_client.end();
               FD_CLR(dead_client.fd(), &active_fd_set);
               clients.erase(dead_client.fd());
-            } else (*process_message)(crdt, *this);
+            }
           } 
         }
       }

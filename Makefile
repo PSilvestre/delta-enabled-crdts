@@ -4,10 +4,10 @@ FLAGS = -std=c++11
 PB_FLAGS = `pkg-config --cflags protobuf`
 PB_LIBS = `pkg-config --libs protobuf`
 
-all: delta-tests proto-tests replicas
+all: delta-tests proto-tests replicas chat
 
 delta-tests: crdt-proto delta-tests.cc
-	$(CC) $(FLAGS) delta-tests.cc -o delta-tests
+	$(CC) $(FLAGS) delta-tests.cc -o delta-tests $(PB_LIBS)
 	./delta-tests
 
 proto-tests: crdt-proto proto-tests.cc
