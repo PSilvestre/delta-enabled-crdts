@@ -5,12 +5,15 @@ message crdt {
     GSET = 0;
     TWOPSET = 1;
     GCOUNTER = 2;
+    CHAT = 100; // to be used on unix-sockets server and client (remove later)
   }
 
   required crdt_type type = 1;
   optional gset gset = 2;
   optional twopset twopset = 3;
   optional gcounter gcounter = 4;
+
+  optional string text = 100; // same
 }
 
 message gset {

@@ -1,5 +1,4 @@
 #include <map>
-#include "crdt.pb.h"
 #include "csock.h" 
 
 int main(int argc, char *argv[])
@@ -11,7 +10,6 @@ int main(int argc, char *argv[])
   }
 
   map<int, csocket> clients;
-  //typedef pair<int, csocket> client_entry;
 
   fd_set active_fd_set, read_fd_set;
 

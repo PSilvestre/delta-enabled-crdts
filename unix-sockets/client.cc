@@ -1,6 +1,5 @@
 #include <string>
 #include <thread>
-#include "crdt.pb.h"
 #include "csock.h"
 
 void read_from_socket(csocket& socket)
@@ -29,6 +28,7 @@ int main(int argc, char *argv[])
   while(getline(cin, line))
   {
     proto::crdt crdt;
+    crdt.set_type(proto::crdt::CHAT);
     crdt.set_text(line);
     socket.send(crdt);
   }
