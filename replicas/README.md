@@ -6,9 +6,12 @@ Make sure you're in the root of the repository. Then:
 $ make replicas
 ```
 
-__Usage:__ ./replica PORT [OTHER\_REPLICAS\_PORT]
+__Usage:__ 
+```bash
+$ ./replica PORT [OTHER\_REPLICAS\_PORT]
+```
 
-#### Example with two replicas
+## Example with two replicas
 
 With two terminals open:
 
