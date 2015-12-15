@@ -9,7 +9,7 @@
 #include <netdb.h>      // constains structure "struct hostent" 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "../crdt.pb.h"
+#include "../message.pb.h"
 
 using namespace std;
 using namespace google::protobuf::io;
@@ -33,9 +33,9 @@ class csocket
 
     int fd() { return socket_fd; }
 
-    bool send(const proto::crdt& crdt)
+    bool send(const proto::message& message)
     {
-      int body_size = crdt.ByteSize();
+      int body_size = message.ByteSize();
       int message_size = header_size(body_size) + body_size;
       char write_buffer[message_size];
 
@@ -43,13 +43,13 @@ class csocket
       CodedOutputStream cos(&aos);
 
       cos.WriteVarint32(body_size);
-      crdt.SerializeToCodedStream(&cos);
+      message.SerializeToCodedStream(&cos);
 
       int bytes_sent = write(socket_fd, write_buffer, message_size);
       return message_size == bytes_sent;
     }
 
-    bool receive(proto::crdt& crdt)
+    bool receive(proto::message& message)
     {
       char header_buffer[MAX_HEADER_SIZE];
       int bytes_received = read(socket_fd, header_buffer, MAX_HEADER_SIZE);
@@ -68,15 +68,15 @@ class csocket
       bytes_received = read(socket_fd, body_buffer, missing_bytes);
       if (bytes_received != missing_bytes) error("error reading body");
 
-      char message[message_size];
-      join(message, header_buffer, body_buffer, missing_bytes);
+      char buffer[message_size];
+      join(buffer, header_buffer, body_buffer, missing_bytes);
 
-      ArrayInputStream ais(message, message_size);
+      ArrayInputStream ais(buffer, message_size);
       CodedInputStream cis(&ais);
       cis.ReadVarint32(&body_size);
 
       CodedInputStream::Limit limit = cis.PushLimit(body_size);
-      crdt.ParseFromCodedStream(&cis);
+      message.ParseFromCodedStream(&cis);
       cis.PopLimit(limit);
 
       return true;
@@ -158,7 +158,7 @@ class csocketserver
      *
      * if there are new messages, they will be added to vector "new_messages"
      */
-    void act(vector<proto::crdt>& new_messages)
+    void act(vector<proto::message>& new_messages)
     {
       read_fd_set = active_fd_set;
 
@@ -172,6 +172,7 @@ class csocketserver
 
       for (int i = 0; i < FD_SETSIZE; i++)
       {
+        cout << "FD_SETSIZE: " << FD_SETSIZE << endl;
         if (FD_ISSET(i, &read_fd_set))
         {
           if( i == socket_fd)
@@ -182,10 +183,10 @@ class csocketserver
           }
           else
           {
-            proto::crdt crdt;
-            bool success = clients.at(i).receive(crdt);
+            proto::message message;
+            bool success = clients.at(i).receive(message);
 
-            if (success) new_messages.push_back(crdt);
+            if (success) new_messages.push_back(message);
             else
             {
               csocket dead_client = clients.at(i);
@@ -203,6 +204,12 @@ class csocketserver
       vector<csocket> result;
       for (const auto& kv : clients) result.push_back(kv.second);
       return result;
+    }
+
+    bool send_to(int fd, proto::message message)
+    {
+      bool exists = clients.count(fd) > 0;
+      return exists && clients.at(fd).send(message);
     }
 
     void end() // rename to close

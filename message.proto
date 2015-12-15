@@ -1,19 +1,25 @@
 package proto;
 
-message crdt {
-  enum crdt_type {
-    GSET = 0;
-    TWOPSET = 1;
-    GCOUNTER = 2;
+message message {
+  enum message_type {
+    ACK = 0;
+    GSET = 1;
+    TWOPSET = 2;
+    GCOUNTER = 3;
     CHAT = 100; // to be used on unix-sockets server and client (remove later)
   }
 
-  required crdt_type type = 1;
-  optional gset gset = 2;
-  optional twopset twopset = 3;
-  optional gcounter gcounter = 4;
+  required message_type type = 1;
+  optional ack ack = 2;
+  optional gset gset = 3;
+  optional twopset twopset = 4;
+  optional gcounter gcounter = 5;
 
   optional string text = 100; // same
+}
+
+message ack {
+  required uint32 n = 1;
 }
 
 message gset {

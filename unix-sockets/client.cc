@@ -6,9 +6,9 @@ void read_from_socket(csocket& socket)
 {
   while(true)
   {
-    proto::crdt crdt;
-    socket.receive(crdt);
-    cout << crdt.text() << endl;
+    proto::message message;
+    socket.receive(message);
+    cout << message.text() << endl;
   }
 }
 
@@ -27,10 +27,10 @@ int main(int argc, char *argv[])
   string line;
   while(getline(cin, line))
   {
-    proto::crdt crdt;
-    crdt.set_type(proto::crdt::CHAT);
-    crdt.set_text(line);
-    socket.send(crdt);
+    proto::message message;
+    message.set_type(proto::message::CHAT);
+    message.set_text(line);
+    socket.send(message);
   }
 
   socket.end();

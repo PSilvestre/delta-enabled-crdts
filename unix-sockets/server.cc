@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 
   while(true)
   {
-    vector<proto::crdt> new_messages;
+    vector<proto::message> new_messages;
     socket_server.act(new_messages);
 
     for(const auto& new_message : new_messages)

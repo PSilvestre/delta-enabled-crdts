@@ -27,13 +27,13 @@ vector<string> split(const string& s, char delim)
   return elems;
 }
 
-void receive_updates(int port, twopset<string>& gs, mutex& mtx)
+void receive_updates(int port, twopset<string>& tps, mutex& mtx)
 {
   csocketserver socket_server = listen_on(port);
 
   while(true)
   {
-    vector<proto::crdt> new_messages;
+    vector<proto::message> new_messages;
     socket_server.act(new_messages);
 
     mtx.lock();
@@ -42,7 +42,7 @@ void receive_updates(int port, twopset<string>& gs, mutex& mtx)
       twopset<string> delta;
       new_message >> delta;
 
-      gs.join(delta);
+      tps.join(delta);
     }
     mtx.unlock();
   }
@@ -70,7 +70,7 @@ void send_updates(vector<int> other_replicas_ports, twopset<string>& tps, mutex&
   while(getline(cin, line))
   {
     vector<string> parts = split(line, ' ');
-    if(parts.size() > 0) {
+    if(!parts.empty()) {
       if(parts.front() == "add" || parts.front() == "rmv") {
         twopset<string> deltas;
 
@@ -86,9 +86,9 @@ void send_updates(vector<int> other_replicas_ports, twopset<string>& tps, mutex&
         }
         mtx.unlock();
 
-        proto::crdt crdt;
-        crdt << deltas;
-        for(auto& other_replica : other_replicas) other_replica.send(crdt);
+        proto::message message;
+        message << deltas;
+        for(auto& other_replica : other_replicas) other_replica.send(message);
 
       } else if(parts.front() == "show") {
         mtx.lock(); // is this needed?
@@ -107,17 +107,18 @@ int main(int argc, char *argv[])
 {
   if (argc < 3)
   {
-    fprintf(stderr, "Usage: %s PORT [OTHER_REPLICA_PORT]\n", argv[0]);
+    fprintf(stderr, "Usage: %s PORT [OTHER_REPLICAS_PORT]\n", argv[0]);
     exit(1);
   }
 
   twopset<string> gs;
   mutex mtx;
+  int port = atoi(argv[1]);
   vector<int> other_replicas_ports;
 
   for(int i = 2; i < argc; i++) other_replicas_ports.push_back(atoi(argv[i]));
 
-  thread reader(receive_updates, atoi(argv[1]), std::ref(gs), std::ref(mtx));
+  thread reader(receive_updates, port, std::ref(gs), std::ref(mtx));
   sleep(5);
   thread writer(send_updates, other_replicas_ports, std::ref(gs), std::ref(mtx));
 

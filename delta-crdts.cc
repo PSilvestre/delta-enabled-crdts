@@ -36,7 +36,7 @@
 #include <string>
 #include <iostream>
 #include <type_traits>
-#include "crdt.pb.h"
+#include "message.pb.h"
 
 using namespace std;
 
@@ -558,21 +558,21 @@ public:
     return output;            
   }
 
-  friend proto::crdt& operator << (proto::crdt& crdt, const gcounter<V,K>& gc)
+  friend proto::message& operator << (proto::message& message, const gcounter<V,K>& gc)
   {
-    crdt.set_type(proto::crdt::GCOUNTER);
-    proto::gcounter *pgc = crdt.mutable_gcounter();
+    message.set_type(proto::message::GCOUNTER);
+    proto::gcounter *pgc = message.mutable_gcounter();
     *(pgc->mutable_id()) << gc.id;
     *(pgc->mutable_map()) << gc.m;
-    return crdt;
+    return message;
   }
 
-  friend const proto::crdt& operator >> (const proto::crdt& crdt, gcounter<V,K>& gc)
+  friend const proto::message& operator >> (const proto::message& message, gcounter<V,K>& gc)
   {
     gc.m.clear();
-    crdt.gcounter().id() >> gc.id;
-    crdt.gcounter().map() >> gc.m;
-    return crdt;
+    message.gcounter().id() >> gc.id;
+    message.gcounter().map() >> gc.m;
+    return message;
   }
 
 };
@@ -802,20 +802,20 @@ public:
     return output;            
   }
 
-  friend proto::crdt& operator << (proto::crdt& crdt, const gset<T>& gs)
+  friend proto::message& operator << (proto::message& message, const gset<T>& gs)
   {
-    crdt.set_type(proto::crdt::GSET);
-    proto::gset *pgs = crdt.mutable_gset();
+    message.set_type(proto::message::GSET);
+    proto::gset *pgs = message.mutable_gset();
     *(pgs->mutable_added()) << gs.s;
-    return crdt;
+    return message;
   }
 
-  friend const proto::crdt& operator >> (const proto::crdt& crdt, gset<T>& gs)
+  friend const proto::message& operator >> (const proto::message& message, gset<T>& gs)
   {
-    //if(crdt.type() != proto::crdt::GSET) throw exception?
+    //if(message.type() != proto::message::GSET) throw exception?
     gs.s.clear();
-    crdt.gset().added() >> gs.s;
-    return crdt;
+    message.gset().added() >> gs.s;
+    return message;
   }
 
   gset<T> add (const T& val)
@@ -869,22 +869,22 @@ public:
     return output;            
   }
 
-  friend proto::crdt& operator << (proto::crdt& crdt, const twopset<T>& gs)
+  friend proto::message& operator << (proto::message& message, const twopset<T>& gs)
   {
-    crdt.set_type(proto::crdt::TWOPSET);
-    proto::twopset *pts = crdt.mutable_twopset();
+    message.set_type(proto::message::TWOPSET);
+    proto::twopset *pts = message.mutable_twopset();
     *(pts->mutable_added()) << gs.s;
     *(pts->mutable_removed()) << gs.t;
-    return crdt;
+    return message;
   }
 
-  friend const proto::crdt& operator >> (const proto::crdt& crdt, twopset<T>& tps)
+  friend const proto::message& operator >> (const proto::message& message, twopset<T>& tps)
   {
     tps.s.clear();
     tps.t.clear();
-    crdt.twopset().added() >> tps.s;
-    crdt.twopset().removed() >> tps.t;
-    return crdt;
+    message.twopset().added() >> tps.s;
+    message.twopset().removed() >> tps.t;
+    return message;
   }
 
   twopset<T> add (const T& val) 
