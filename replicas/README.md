@@ -8,7 +8,7 @@ $ make replicas
 
 __Usage:__ 
 ```bash
-$ ./replica PORT [OTHER\_REPLICAS\_PORT]
+$ ./replica PORT [OTHER_REPLICAS_PORT]
 ```
 
 ## Example with two replicas
@@ -44,8 +44,7 @@ Example:
 - __first__ replica:
 
 ```bash
-add a
-add b
+add a b
 show
 2PSet: S( a b ) T ( )
 rmv a
