@@ -806,13 +806,13 @@ void example_orseq()
   bl.push_back(true);
   bl.push_back(false);
   bl.push_back(true);
-  bl.push_back(true);
-  bl.push_back(false);
-  bl.push_back(true);
+//  bl.push_back(true);
+//  bl.push_back(false);
+//  bl.push_back(true);
   br.push_back(false);
   br.push_back(true);
   br.push_back(true);
-  br.push_back(false);
+//  br.push_back(false);
   br.push_back(true);
   
   cout << bl << endl;
@@ -903,6 +903,87 @@ void  example_mvreg()
 
 }
 
+void test_bag()
+{
+  bag<pair<int,int>> b("i");
+  bag<pair<int,int>> c("j");
+
+  b.mydata().first=1;
+  cout << b.mydata() << endl;
+  cout << b << endl;
+  c.join(b);
+  b.mydata().first=3;
+  b.join(c);
+  cout << b << endl;
+  c.reset();
+  b.join(c);
+  cout << b << endl;
+
+  // Now inside a map
+  ormap<string,bag<pair<int,int>>> ma("y");
+
+  cout << ma["a"] << endl;
+  ma["a"].fresh();
+  cout << ma["a"] << endl;
+  cout << ma["a"].mydata() << endl;
+  ma["a"].mydata().first+=1;
+  cout << ma["a"].mydata() << endl;
+  cout << ma << endl;
+}
+
+void test_rwcounter()
+{
+  rwcounter<int> rwc1("i"),rwc2("j");
+
+  rwc1.inc();
+  rwc1.inc(2);
+  rwc1.dec();
+  rwc2.inc(5);
+  cout << rwc1 << endl;
+  cout << rwc2 << endl;
+  rwc1.join(rwc2);
+  cout << rwc1 << endl;
+  cout << rwc1.read() << endl;
+  cout << "Reset:" << rwc2.reset() << endl;
+  cout << "Delta:" << rwc2.inc(1) << endl;
+  rwc1.join(rwc2);
+  cout << rwc1 << endl;
+  cout << rwc1.read() << endl;
+  rwc2.join(rwc1);
+  rwc2.reset();
+  rwc1.fresh();
+  cout << rwc1 << endl;
+  rwc1.inc();
+  cout << rwc1 << endl;
+  rwc1.join(rwc2);
+  cout << rwc1 << endl;
+  cout << rwc1.read() << endl;
+
+  ormap<string,rwcounter<float>> mx("x");
+
+  cout << mx["adds"] << endl;
+  cout << mx["adds"] << endl;
+  cout << mx["adds"].inc() << endl;
+  mx["prints"].inc(5);
+  cout << "Delta:" << mx["prints"].inc(6) << endl;
+  mx["adds"].inc();
+
+  cout << mx["adds"] << endl;
+  cout << mx["adds"].read() << endl;
+  cout << mx << endl;
+
+  ormap<string,rwcounter<float>> my("y");
+
+  my.join(mx);
+  my.erase("prints");
+  mx["prints"].fresh(); // without this fresh concurrent inc is lost
+  mx["prints"].inc(5);
+  mx.join(my);
+  cout << mx << endl;
+
+
+}
+
 int main(int argc, char * argv[])
 {
   test_gset();
@@ -921,6 +1002,8 @@ int main(int argc, char * argv[])
   test_dwflag();
   test_ormap();
   test_rwlwwset();
+  test_bag();
+  test_rwcounter();
 
   example1();
   example2();
@@ -941,5 +1024,10 @@ int main(int argc, char * argv[])
   example_bcounter();
   example_orseq();
   example_mvreg();
+
+  pair<int,int> a(1,2),b(2,1);
+  cout << a << endl;
+
+
 }
 
