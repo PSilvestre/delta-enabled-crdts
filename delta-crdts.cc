@@ -412,7 +412,6 @@ public:
     {
       if ( it != ds.end() && ( ito == o.ds.end() || it->first < ito->first))
       {
-        // cout << "ds one\n";
         // dot only at this
         if (o.c.dotin(it->first)) // other knows dot, must delete here 
           ds.erase(it++);
@@ -421,7 +420,6 @@ public:
       }
       else if ( ito != o.ds.end() && ( it == ds.end() || ito->first < it->first))
       {
-        //cout << "ds two\n";
         // dot only at other
         if(! c.dotin(ito->first)) // If I dont know, import
           ds.insert(*ito);
@@ -429,14 +427,56 @@ public:
       }
       else if ( it != ds.end() && ito != o.ds.end() )
       {
-        // cout << "ds three\n";
-        // in both
+        // dot in both
         ++it; ++ito;
       }
     } while (it != ds.end() || ito != o.ds.end() );
     // CC
     c.join(o.c);
   }
+
+  void deepjoin (const dotkernel<T,K> & o)
+  {
+    if (this == &o) return; // Join is idempotent, but just dont do it.
+    // DS
+    // will iterate over the two sorted sets to compute join
+    //typename  map<pair<K,int>,T>::iterator it;
+    //typename  map<pair<K,int>,T>::const_iterator ito;
+    auto it=ds.begin(); auto ito=o.ds.begin();
+    do 
+    {
+      if ( it != ds.end() && ( ito == o.ds.end() || it->first < ito->first))
+      {
+        // dot only at this
+        if (o.c.dotin(it->first)) // other knows dot, must delete here 
+          ds.erase(it++);
+        else // keep it
+          ++it;
+      }
+      else if ( ito != o.ds.end() && ( it == ds.end() || ito->first < it->first))
+      {
+        // dot only at other
+        if(! c.dotin(ito->first)) // If I dont know, import
+          ds.insert(*ito);
+        ++ito;
+      }
+      else if ( it != ds.end() && ito != o.ds.end() )
+      {
+        // dot in both
+        // check it payloads are diferent 
+        if (it->second != ito->second)
+        {
+          // if payloads are not equal, they must be mergeable
+          // use the more general binary join
+          it->second=::join(it->second,ito->second);
+        }
+        ++it; ++ito;
+      }
+    } while (it != ds.end() || ito != o.ds.end() );
+    // CC
+    c.join(o.c);
+  }
+
 
   dotkernel<T,K> add (const K& id, const T& val) 
   {
@@ -769,7 +809,7 @@ public:
 
 };
 
-// template<typename T, typename K=string>
+
 template<typename T>
 class gset
 {
@@ -1576,6 +1616,205 @@ class ormap
 
 };
 
+// A bag is similar to an RWSet, but allows for CRDT payloads
+template<typename V, typename K=string>
+class bag 
+{
+private:
+  dotkernel<V,K> dk; // Dot kernel
+  K id;
+
+public:
+
+  bag() {} // Only for deltas and those should not be mutated
+  bag(K k) : id(k) {} // Mutable replicas need a unique id
+  bag(K k, dotcontext<K> &jointc) : id(k), dk(jointc) {} 
+
+  bag<V,K> & operator=(const bag<V,K> & o)
+  {
+    if (&o == this) return *this;
+    if (&dk != &o.dk) dk=o.dk; 
+    id=o.id;
+    return *this;
+  }
+
+
+  dotcontext<K> & context()
+  {
+    return dk.c;
+  }
+
+  void insert(pair<pair<K,int>,V> t)
+  {
+    dk.ds.insert(pair<pair<K,int>,V>(t));
+    dk.c.insertdot(t.first);
+  }
+
+  friend ostream &operator<<( ostream &output, const bag<V,K>& o)
+  { 
+    output << "Bag:" << o.dk;
+    return output;            
+  }
+
+  typename map<pair<K,int>,V>::iterator begin()
+  {
+    return dk.ds.begin();
+  }
+
+  typename map<pair<K,int>,V>::iterator end()
+  {
+    return dk.ds.end();
+  }
+
+  pair<K,int> mydot()
+  {
+    auto me = dk.ds.end();
+    for (auto it=dk.ds.begin(); it!=dk.ds.end(); ++it)
+    {
+      if (it->first.first == id) // a candidate
+      {
+        if (me==dk.ds.end()) // pick at least one valid
+          me=it;
+        else // need to switch if more recent
+        {
+          if (it->first.second > me->first.second)
+            me=it;
+        }
+      }
+    }
+    if (me != dk.ds.end())
+      return me->first;
+    else 
+    {
+      fresh();
+      return mydot(); // After a fresh it must be found
+    }
+  }
+
+  V & mydata()
+  {
+    auto me = dk.ds.end();
+    for (auto it=dk.ds.begin(); it!=dk.ds.end(); ++it)
+    {
+      if (it->first.first == id) // a candidate
+      {
+        if (me==dk.ds.end()) // pick at least one valid
+          me=it;
+        else // need to switch if more recent
+        {
+          if (it->first.second > me->first.second)
+            me=it;
+        }
+      }
+    }
+    if (me != dk.ds.end())
+      return me->second;
+    else 
+    {
+      fresh();
+      return mydata(); // After a fresh it must be found
+    }
+  }
+
+  // To protect from concurrent removes, create fresh dot for self
+  void fresh()
+  {
+    dk.add(id,V());
+  }
+
+  bag<V,K> reset()
+  {
+    bag<V,K> r;
+    r.dk=dk.rmv(); 
+    return r;
+  }
+
+  // Using the deep join will try to join different payloads under same dot
+  void join (const bag<V,K> & o)
+  {
+    dk.deepjoin(o.dk);
+  }
+};
+
+// Inspired by designs from Carl Lerche and Paulo S. Almeida
+// Still need to make it work properly inside maps
+template<typename V, typename K=string>
+class rwcounter    //  Reset Wins Counter
+{
+private:
+  bag<pair<V,V>,K> b; // Bag of pairs
+  K id;
+
+public:
+  rwcounter() {} // Only for deltas and those should not be mutated
+  rwcounter(K k) : id(k), b(k) {} // Mutable replicas need a unique id
+  rwcounter(K k, dotcontext<K> &jointc) : id(k), b(k,jointc) {} 
+
+  rwcounter<V,K> & operator=(const rwcounter<V,K> & o)
+  {
+    if (&o == this) return *this;
+    if (&b != &o.b) b=o.b; 
+    id=o.id; 
+    return *this;
+  }
+
+  dotcontext<K> & context()
+  {
+    return b.context();
+  }
+
+  friend ostream &operator<<( ostream &output, const rwcounter<V,K>& o)
+  { 
+    output << "ResetWinsCounter:" << o.b;
+    return output;            
+  }
+  
+  rwcounter<V,K> inc (const V& val=1) 
+  {
+    rwcounter<V,K> r;
+    b.mydata().first+=val;
+    r.b.insert(pair<pair<K,int>,pair<V,V>>(b.mydot(),b.mydata()));
+    return r;
+  }
+
+  rwcounter<V,K> dec (const V& val=1) 
+  {
+    rwcounter<V,K> r;
+    b.mydata().second+=val;
+    r.b.insert(pair<pair<K,int>,pair<V,V>>(b.mydot(),b.mydata()));
+    return r;
+  }
+
+  rwcounter<V,K> reset()
+  {
+    rwcounter<V,K> r;
+    r.b=b.reset();
+    return r;
+  }
+
+  void fresh()
+  {
+    b.fresh();
+  }
+
+  V read()
+  {
+    pair<V,V> ac;
+    for (const auto & dv : b)
+    {
+      ac.first+=dv.second.first;
+      ac.second+=dv.second.second;
+    }
+    return ac.first - ac.second;
+  }
+
+  void join(const rwcounter<V,K> & o)
+  {
+    b.join(o.b);
+  }
+
+};
+
 template<typename N, typename V>
 class gmap
 {
@@ -1643,6 +1882,7 @@ class gmap
   }
 
 };
+
 
 template <typename V=int, typename K=string>
 class bcounter
@@ -1715,7 +1955,6 @@ public:
 
 };
 
-// Still need to add deltas to mutations bellow
 template<typename T=char, typename I=string>
 class orseq
 {
@@ -1931,3 +2170,4 @@ public:
   }
 
 };
+
