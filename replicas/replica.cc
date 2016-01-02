@@ -8,7 +8,8 @@ using namespace std;
 
 void socket_reader(int my_id, int port, twopset<string>& tps, int& seq, map<int, twopset<string>>& deltas, map<int, int>& acks, mutex& mtx)
 {
-  csocketserver socket_server = listen_on(port);
+  int socket_server_fd = helper::net::listen_on(port);
+  csocketserver socket_server(socket_server_fd);
 
   while(true)
   {
@@ -51,7 +52,7 @@ void socket_reader(int my_id, int port, twopset<string>& tps, int& seq, map<int,
       mtx.unlock();
       
       for(auto& kv : acks_later)
-        socket_server.send_to(kv.first, kv.second);
+        helper::pb::send(kv.first, kv.second);
     }
   }
 
@@ -165,7 +166,8 @@ int main(int argc, char *argv[])
     int replica_id;
     int replica_port;
     util::id_and_port(argv[i], replica_id, replica_port);
-    csocket replica = connect_to(host, replica_port);
+    int replica_fd = helper::net::connect_to(host, replica_port);
+    csocket replica(replica_fd);
     replicas.emplace(replica_id, replica);
   }
 
