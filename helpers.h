@@ -5,7 +5,7 @@
 #include <netdb.h>      // constains structure "struct hostent" 
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
-#include "../message.pb.h"
+#include "message.pb.h"
 
 using namespace std;
 using namespace google::protobuf::io;

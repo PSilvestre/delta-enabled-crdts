@@ -1,4 +1,4 @@
-#include "csock.h"
+#include "../csock.h"
 
 int main(int argc, char *argv[])
 {

@@ -14,9 +14,9 @@ proto-tests: message-proto proto-tests.cc
 	$(CC) $(FLAGS) proto-tests.cc message.pb.o -o proto-tests $(PB_LIBS)
 	./proto-tests
 
-chat: message-proto unix-sockets/client.cc unix-sockets/server.cc
-	$(CC) $(FLAGS) unix-sockets/client.cc message.pb.o -o client $(PB_LIBS)
-	$(CC) $(FLAGS) unix-sockets/server.cc message.pb.o -o server $(PB_LIBS)
+chat: message-proto chat/client.cc chat/server.cc
+	$(CC) $(FLAGS) chat/client.cc message.pb.o -o client $(PB_LIBS)
+	$(CC) $(FLAGS) chat/server.cc message.pb.o -o server $(PB_LIBS)
 
 replicas: message-proto replicas/replica.cc
 	$(CC) $(FLAGS) replicas/replica.cc message.pb.o -o replica $(PB_LIBS)

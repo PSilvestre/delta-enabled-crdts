@@ -1,6 +1,6 @@
 #include <string>
 #include <thread>
-#include "csock.h"
+#include "../csock.h"
 
 void read_from_socket(csocket& socket)
 {

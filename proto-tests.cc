@@ -1,6 +1,6 @@
 #include "delta-crdts.cc"
 #include <google/protobuf/text_format.h>
-#include "cat.h"
+#include "cat/cat.h"
 #include "message.pb.h"
 
 void show_message_proto(const proto::message& message)
