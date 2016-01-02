@@ -20,9 +20,10 @@ int main(int argc, char *argv[])
     exit(0);
   }
 
-  csocket socket = connect_to(argv[1], atoi(argv[2]));
+  int socket_fd = helper::net::connect_to(argv[1], atoi(argv[2]));
+  csocket socket(socket_fd);
 
-  thread socket_reader(read_from_socket, ref(socket));
+  thread socket_reader(read_from_socket, std::ref(socket));
 
   string line;
   while(getline(cin, line))
