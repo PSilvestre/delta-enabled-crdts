@@ -1,6 +1,11 @@
 #include <string>
+#include <iostream>
 #include <thread>
-#include "../csock.h"
+#include "../csock/csocket.h"
+#include "../helpers.h"
+#include "../message.pb.h"
+
+using namespace std;
 
 void read_from_socket(csocket& socket)
 {

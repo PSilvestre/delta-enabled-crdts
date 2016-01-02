@@ -1,10 +1,35 @@
+#include <unistd.h>
 #include <mutex>
 #include <thread>
+#include <random>
 #include <google/protobuf/text_format.h>
-#include "util.h"
+#include "../csock/csocket.h"
+#include "../csock/csocketserver.h"
+#include "../helpers.h"
 #include "../delta-crdts.cc"
 
 using namespace std;
+
+void id_and_port(char arg[], int& id, int& port)
+{
+  string s(arg);
+  vector<string> v = helper::str::split(s, ':');
+  id = atoi(v.at(0).c_str());
+  port = atoi(v.at(1).c_str());
+}
+
+int random_replica_id(map<int, csocket>& replicas)
+{
+  random_device rd;
+  default_random_engine e(rd());
+  uniform_int_distribution<int> dist(0, replicas.size() - 1);
+  int index = dist(e);
+
+  vector<int> replicas_id;
+  for(auto& kv : replicas) replicas_id.push_back(kv.first);
+
+  return replicas_id.at(index);
+}
 
 void socket_reader(int my_id, int port, twopset<string>& tps, int& seq, map<int, twopset<string>>& deltas, map<int, int>& acks, mutex& mtx)
 {
@@ -69,7 +94,7 @@ void keyboard_reader(twopset<string>& tps, int& seq, map<int, twopset<string>>& 
   string line;
   while(getline(cin, line))
   {
-    vector<string> parts = util::split(line, ' ');
+    vector<string> parts = helper::str::split(line, ' ');
     if(!parts.empty()) {
       if(parts.front() == "add" || parts.front() == "rmv") {
         twopset<string> delta;
@@ -102,7 +127,7 @@ void gossip(int my_id, map<int, csocket>& replicas, int& seq, map<int, twopset<s
 {
   sleep(10);
   
-  int replica_id = util::random_replica_id(replicas);
+  int replica_id = random_replica_id(replicas);
   cout << "will gossip to " << replica_id << endl; 
   
   mtx.lock();
@@ -146,7 +171,7 @@ int main(int argc, char *argv[])
   char host[] = "localhost";
   int id;
   int port;
-  util::id_and_port(argv[1], id, port);
+  id_and_port(argv[1], id, port);
   map<int, csocket> replicas; // unique-id -> socket
 
   thread sr(
@@ -165,7 +190,7 @@ int main(int argc, char *argv[])
   {
     int replica_id;
     int replica_port;
-    util::id_and_port(argv[i], replica_id, replica_port);
+    id_and_port(argv[i], replica_id, replica_port);
     int replica_fd = helper::net::connect_to(host, replica_port);
     csocket replica(replica_fd);
     replicas.emplace(replica_id, replica);
@@ -196,3 +221,4 @@ int main(int argc, char *argv[])
   for (auto& kv : replicas) kv.second.end();
   return 0;
 }
+

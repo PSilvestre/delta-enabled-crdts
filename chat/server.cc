@@ -1,4 +1,7 @@
-#include "../csock.h"
+#include <map>
+#include "../csock/csocket.h"
+#include "../csock/csocketserver.h"
+#include "../helpers.h"
 
 int main(int argc, char *argv[])
 {
