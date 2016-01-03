@@ -3,6 +3,8 @@
 
 #include <string>
 #include <vector>
+#include <set>
+#include <map>
 #include "message.pb.h"
 
 const int MAX_HEADER_SIZE = 4;
@@ -32,6 +34,24 @@ namespace helper {
     // http://stackoverflow.com/a/236803/4262469
     vector<string>& split(const string& s, char delim, vector<string>& elems);
     vector<string> split(const string& s, char delim);
+  }
+
+  namespace map {
+    template<typename K, typename V>
+    set<K> keys(const std::map<K,V>& map)
+    {
+      set<K> keys;
+      for(const auto& kv : map) keys.insert(kv.first);
+      return keys;
+    }
+
+    template<typename K, typename V>
+    vector<V> values(const std::map<K,V>& map)
+    {
+      vector<V> values;
+      for(const auto& kv : map) values.push_back(kv.second);
+      return values;
+    }
   }
 }
 
