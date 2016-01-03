@@ -1,7 +1,7 @@
 #ifndef CSOCKETSERVER_H__INCLUDED
 #define CSOCKETSERVER_H__INCLUDED
 
-#include <vector>
+#include <set>
 #include <map>
 #include "../message.pb.h"
 
@@ -13,15 +13,18 @@ class csocketserver
     int socket_fd;
     fd_set active_fd_set;
     fd_set read_fd_set;
-    vector<int> connected_fd;
+    set<int> connected_fd;
+    map<int, int> fd_to_id;
 
   public:
     csocketserver(int fd);
 
     int fd();
-    vector<int> connected();
+    set<int> connected();
+    set<int> fds_with_id();
     void add_fd(int fd);
     void remove_fd(int fd);
+    void set_id(int fd, int id);
 
     /**
      * This method accepts new clients or receives new messages

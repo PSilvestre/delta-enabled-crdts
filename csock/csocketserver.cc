@@ -2,7 +2,6 @@
 #include <string>
 #include <map>
 #include <vector>
-#include <algorithm> // remove
 #include <unistd.h>
 #include "csocketserver.h"
 #include "../helpers.h"
@@ -20,24 +19,32 @@ int csocketserver::fd()
   return socket_fd; 
 }
 
-vector<int> csocketserver::connected() 
+set<int> csocketserver::connected() 
 { 
   return connected_fd; 
 } 
 
+set<int> csocketserver::fds_with_id()
+{
+  return helper::map::keys(fd_to_id);
+}
+
 void csocketserver::add_fd(int client_socket_fd)
 {
   FD_SET(client_socket_fd, &active_fd_set);
-  connected_fd.push_back(client_socket_fd);
+  connected_fd.insert(client_socket_fd);
 }
 
 void csocketserver::remove_fd(int client_socket_fd)
 {
   FD_CLR(client_socket_fd, &active_fd_set);
-  auto it = remove(connected_fd.begin(), connected_fd.end(), client_socket_fd);
-  connected_fd.erase(it, connected_fd.end());
+  connected_fd.erase(client_socket_fd);
 }
 
+void csocketserver::set_id(int fd, int id)
+{
+  fd_to_id[fd] = id;
+}
 
 void csocketserver::act(map<int, proto::message>& fd_to_new_messages)
 {
@@ -60,6 +67,8 @@ void csocketserver::act(map<int, proto::message>& fd_to_new_messages)
   if (select_result == 0) return; // timeout
 
   for (int i = 0; i < FD_SETSIZE; i++)
+  // if two messages from the same fd
+  // will I loose one of them?
   {
     if (FD_ISSET(i, &read_fd_set))
     {
