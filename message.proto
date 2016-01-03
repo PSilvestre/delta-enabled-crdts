@@ -6,7 +6,6 @@ message message {
     GSET = 1;
     TWOPSET = 2;
     GCOUNTER = 3;
-    CHAT = 100; // to be used on unix-sockets server and client (remove later)
   }
 
   required message_type type = 1;
@@ -16,8 +15,6 @@ message message {
   optional gset gset = 4;
   optional twopset twopset = 5;
   optional gcounter gcounter = 6;
-
-  optional string text = 100; // same
 }
 
 message gset {
@@ -58,3 +55,4 @@ message cat {
   required int32 id = 1;
   required string name = 2;
 }
+

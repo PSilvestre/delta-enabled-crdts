@@ -4,6 +4,7 @@
 #include "../csock/csocket.h"
 #include "../helpers.h"
 #include "../message.pb.h"
+#include "../delta-crdts.cc"
 
 using namespace std;
 
@@ -13,7 +14,7 @@ void read_from_socket(csocket& socket)
   {
     proto::message message;
     socket.receive(message);
-    cout << message.text() << endl;
+    cout << message.gset().added().entry(0).e_string() << endl;
   }
 }
 
@@ -33,11 +34,13 @@ int main(int argc, char *argv[])
   string line;
   while(getline(cin, line))
   {
+    gset<string> gs;
+    gs.add(line);
+
     proto::message message;
     message.set_id(0); // required in anti-entropy algorithm
     message.set_seq(0); // same
-    message.set_type(proto::message::CHAT);
-    message.set_text(line);
+    message << gs;
     socket.send(message);
   }
 
