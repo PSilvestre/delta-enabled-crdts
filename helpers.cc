@@ -8,6 +8,7 @@
 #include <netdb.h> // struct hostent
 #include <google/protobuf/io/coded_stream.h>
 #include <google/protobuf/io/zero_copy_stream_impl_lite.h>
+#include <google/protobuf/text_format.h>
 #include "message.pb.h"
 
 using namespace std;
@@ -95,6 +96,13 @@ namespace helper {
   }
 
   namespace pb {
+    void show(const proto::message& message)
+    {
+      string message_str;
+      google::protobuf::TextFormat::PrintToString(message, &message_str);
+      cout << message_str << endl;
+    }
+
     int header_size(const uint32_t& body_size)
     {
       return CodedOutputStream::VarintSize32(body_size);

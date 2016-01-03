@@ -22,6 +22,7 @@ namespace helper {
   }
 
   namespace pb {
+    void show(const proto::message& message);
     int header_size(const uint32_t& body_size);
     uint32_t decode_header(char header_buffer[MAX_HEADER_SIZE]);
     void join(char* message, char* header_buffer, char* body_buffer, int missing_bytes);
