@@ -48,6 +48,8 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
             crdt.join(delta);
             seq_to_delta[seq++] = delta;
             mtx.unlock();
+            
+            cout << crdt << endl;
           }
 
           proto::message ack;
@@ -105,6 +107,8 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
 
         seq_to_delta[seq++] = delta;
         mtx.unlock();
+
+        cout << crdt << endl;
       } 
       else if(parts.front() == "show") cout << crdt << endl;
       else if(parts.front() == "connect")
