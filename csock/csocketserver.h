@@ -1,5 +1,5 @@
-#ifndef CSOCKETSERVER_H
-#define CSOCKETSERVER_H
+#ifndef CSOCKETSERVER_H__INCLUDED
+#define CSOCKETSERVER_H__INCLUDED
 
 #include <vector>
 #include <map>
@@ -20,8 +20,8 @@ class csocketserver
 
     int fd();
     vector<int> connected();
-    int accept_one(); // rename to accept
-    void end(); // rename to close
+    void add_fd(int fd);
+    void remove_fd(int fd);
 
     /**
      * This method accepts new clients or receives new messages
@@ -31,6 +31,7 @@ class csocketserver
      */
     void act(map<int, proto::message>& fd_to_new_messages);
 
+    void end(); // rename to close
 };
 
 #endif

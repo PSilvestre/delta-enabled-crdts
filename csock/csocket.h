@@ -1,5 +1,5 @@
-#ifndef CSOCKET_H
-#define CSOCKET_H
+#ifndef CSOCKET_H__INCLUDED
+#define CSOCKET_H__INCLUDED
 
 #include "../message.pb.h"
 

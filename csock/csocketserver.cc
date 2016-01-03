@@ -20,33 +20,44 @@ int csocketserver::fd()
   return socket_fd; 
 }
 
-int csocketserver::accept_one() // rename to accept
-{
-  return helper::net::accept_one(socket_fd);
-}
-
 vector<int> csocketserver::connected() 
 { 
   return connected_fd; 
 } 
 
-void csocketserver::end() // rename to close
+void csocketserver::add_fd(int client_socket_fd)
 {
-  for(auto& fd : connected_fd) close(fd);
-  close(socket_fd);
+  FD_SET(client_socket_fd, &active_fd_set);
+  connected_fd.push_back(client_socket_fd);
 }
+
+void csocketserver::remove_fd(int client_socket_fd)
+{
+  FD_CLR(client_socket_fd, &active_fd_set);
+  auto it = remove(connected_fd.begin(), connected_fd.end(), client_socket_fd);
+  connected_fd.erase(it, connected_fd.end());
+}
+
 
 void csocketserver::act(map<int, proto::message>& fd_to_new_messages)
 {
   read_fd_set = active_fd_set;
 
+  struct timeval timeout; // 10 seconds
+  timeout.tv_sec = 10;
+  timeout.tv_usec = 0;
+
+
   int select_result = select(
       FD_SETSIZE,
       &read_fd_set,
-      NULL, NULL, NULL
-      );  
+      NULL, NULL,
+      &timeout
+  );  
 
   if (select_result < 0) error("error on select");
+  
+  if (select_result == 0) return; // timeout
 
   for (int i = 0; i < FD_SETSIZE; i++)
   {
@@ -54,10 +65,8 @@ void csocketserver::act(map<int, proto::message>& fd_to_new_messages)
     {
       if( i == socket_fd) // new connection
       {
-        int client_socket_fd = accept_one();
-        FD_SET(client_socket_fd, &active_fd_set);
-
-        connected_fd.push_back(client_socket_fd);
+        int client_socket_fd = helper::net::accept_one(socket_fd);
+        add_fd(client_socket_fd);
       }
       else
       {
@@ -67,12 +76,17 @@ void csocketserver::act(map<int, proto::message>& fd_to_new_messages)
         if (success) fd_to_new_messages.emplace(i, message);
         else
         {
+          remove_fd(i);
           close(i);
-          FD_CLR(i, &active_fd_set);
-          connected_fd.erase(remove(connected_fd.begin(), connected_fd.end(), i), connected_fd.end());
         }
       } 
     }
   }
+}
+
+void csocketserver::end() // rename to close
+{
+  for(auto& fd : connected_fd) close(fd);
+  close(socket_fd);
 }
 
