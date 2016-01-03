@@ -14,14 +14,14 @@ class csocketserver
     fd_set _active_fd_set;
     fd_set _read_fd_set;
     set<int> _connected_fd;
-    map<int, int> _fd_to_id;
+    map<int, int> _id_to_fd;
 
   public:
     csocketserver(int fd);
 
     int fd();
     set<int> connected_fd();
-    map<int, int> fd_to_id();
+    map<int, int> id_to_fd();
     void add_fd(int fd);
     void remove_fd(int fd);
     void set_id(int fd, int id);

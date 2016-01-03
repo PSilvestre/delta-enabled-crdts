@@ -24,9 +24,9 @@ set<int> csocketserver::connected_fd()
   return _connected_fd; 
 } 
 
-map<int, int> csocketserver::fd_to_id()
+map<int, int> csocketserver::id_to_fd()
 {
-  return _fd_to_id;
+  return _id_to_fd;
 }
 
 void csocketserver::add_fd(int client_socket_fd)
@@ -43,7 +43,7 @@ void csocketserver::remove_fd(int client_socket_fd)
 
 void csocketserver::set_id(int fd, int id)
 {
-  _fd_to_id[fd] = id;
+  _id_to_fd[id] = fd;
 }
 
 void csocketserver::act(map<int, proto::message>& fd_to_new_messages)
