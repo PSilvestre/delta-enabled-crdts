@@ -4,25 +4,25 @@
 
 using namespace std;
 
-csocket::csocket(int fd) : socket_fd(fd) {}
+csocket::csocket(int fd) : _fd(fd) {}
 
 int csocket::fd()
 {
-  return socket_fd; 
+  return _fd; 
 }
 
 bool csocket::send(const proto::message& message)
 {
-  return helper::pb::send(socket_fd, message);
+  return helper::pb::send(_fd, message);
 }
 
 bool csocket::receive(proto::message& message)
 {
-  return helper::pb::receive(socket_fd, message);
+  return helper::pb::receive(_fd, message);
 }
 
 void csocket::end()
 {
-  close(socket_fd);
+  close(_fd);
 }
 

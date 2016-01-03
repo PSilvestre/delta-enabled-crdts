@@ -10,18 +10,18 @@ using namespace std;
 class csocketserver
 {
   private:
-    int socket_fd;
-    fd_set active_fd_set;
-    fd_set read_fd_set;
-    set<int> connected_fd;
-    map<int, int> fd_to_id;
+    int _fd;
+    fd_set _active_fd_set;
+    fd_set _read_fd_set;
+    set<int> _connected_fd;
+    map<int, int> _fd_to_id;
 
   public:
     csocketserver(int fd);
 
     int fd();
-    set<int> connected();
-    set<int> fds_with_id();
+    set<int> connected_fd();
+    map<int, int> fd_to_id();
     void add_fd(int fd);
     void remove_fd(int fd);
     void set_id(int fd, int id);

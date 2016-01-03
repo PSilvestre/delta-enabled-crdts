@@ -8,7 +8,7 @@ using namespace std;
 class csocket
 {
   private:
-    int socket_fd;
+    int _fd;
 
   public:
     csocket(int fd);
