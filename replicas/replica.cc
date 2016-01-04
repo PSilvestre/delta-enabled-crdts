@@ -1,6 +1,6 @@
 // 
 // Implementation (not ready) of the anti-entropy algorithm described in
-// http://arxiv.org/pdf/1410.2803v1.pdf
+// http://haslab.uminho.pt/ashoker/files/deltacrdt.pdf
 // 
 #include <unistd.h> // sleep
 #include <iostream>
@@ -36,13 +36,13 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
         if(message.type() == proto::message::TWOPSET)
         {
           // 9 on receive(delta, d, n)
+          twopset<string> delta;
+          message >> delta;
 
           if(true)
           {
             // TODO this if should be:
             // 10 if d < Xi
-            twopset<string> delta;
-            message >> delta;
 
             mtx.lock();
             crdt.join(delta);
