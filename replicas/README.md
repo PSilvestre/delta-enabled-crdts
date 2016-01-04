@@ -8,7 +8,7 @@ $ make replicas
 
 __Usage:__ 
 ```bash
-$ ./replica UNIQUE_ID:PORT [UNIQUE_ID:OTHER_REPLICAS_PORT]
+$ ./replica unique_id:port
 ```
 
 ## Example with two replicas
@@ -18,22 +18,21 @@ With two terminals open:
 - in the __first__ one:
 
 ```bash
-$ ./replica 1:3333 2:4444
+$ ./replica 1:3001
 ```
 
 - in the __second__:
 
 ```bash
-$ ./replica 2:4444 1:3333
+$ ./replica 2:3002
 ```
 
-After starting the first replica, you have 5 seconds to start the second one.
-
-You'll eventually see the following message:
+You'll see the following message:
 ```bash
 Usage:
 add [elems]
 rmv [elems]
+connect [unique_id:port]
 show
 ```
 
@@ -41,20 +40,34 @@ Then you can start updating your replicas.
 
 Example:
 
-- __first__ replica:
+- on the __first__ replica:
 
 ```bash
 add a b
-show
 2PSet: S( a b ) T ( )
-rmv a
-show
-2PSet: S( b ) T ( a )
+rmv b
+2PSet: S( a ) T ( b )
 ```
 
-- __second__ replica:
+- on the __second__ replica:
 
 ```bash
-show 
-2PSet: S( b ) T ( a )
-``
+connect 1:3001
+```
+
+Eventually you'll see this on the __second__ replica:
+```bash
+2PSet: S( a ) T ( b )
+```
+
+- on the __second__ replica:
+```bash
+rmv a
+2PSet: S( ) T ( a b )
+```
+
+Eventually you'll see this on the __first__ replica:
+```bash
+2PSet: S( ) T ( a b )
+```
+

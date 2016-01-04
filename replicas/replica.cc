@@ -83,8 +83,8 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
   cout << "Usage:\n";
   cout << "add [elems]\n";
   cout << "rmv [elems]\n";
-  cout << "show\n";
-  cout << "connect [unique_id:port]" << endl;
+  cout << "connect [unique_id:port]\n";
+  cout << "show" << endl;
 
   string line;
   while(getline(cin, line))
