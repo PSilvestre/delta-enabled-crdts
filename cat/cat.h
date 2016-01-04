@@ -26,6 +26,11 @@ class cat {
       return id < c.id;  
     }
 
+    bool operator == (const cat& c) const
+    {
+      id == c.id && name == c.name;  
+    }
+
     friend ostream& operator << (ostream& output, const cat& c)
     {
       output << "cat{id: " << c.id <<", name: " << c.name << "}";
