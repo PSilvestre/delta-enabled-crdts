@@ -16,8 +16,8 @@ using namespace std;
 void error(const char *msg);
 
 namespace helper {
-  template <typename T>
-  T random(vector<T> v)
+  template<typename T>
+  T random(const vector<T>& v)
   {
     random_device rd;
     default_random_engine e(rd());
@@ -26,12 +26,26 @@ namespace helper {
     return v.at(index);
   }
 
-  template <typename T>
-  T random(set<T> s)
+  template<typename T>
+  T random(const set<T>& s)
   {
     vector<T> v;
     for(const auto& e : s) v.push_back(e);
     return random(v);
+  }
+
+  template<typename T>
+  T min(const set<T>& s)
+  {
+    return *s.begin();
+  }
+
+  template<typename T>
+  T min(const vector<T>& v)
+  {
+    set<T> s;
+    for(const auto& e : v) s.insert(e);
+    return min(s);
   }
 
   namespace net {
