@@ -36,18 +36,20 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
           twopset<string> delta;
           message >> delta;
 
-          if(true)
+          mtx.lock();
+          if(!(crdt == delta))
           {
-            // TODO this if should be:
-            // 10 if d < Xi
+            // 10 if d > Xi
+            // since less than (partial order) is not defined in delta-crdts.cc
+            // just test if it's different
+            // TODO fix this
 
-            mtx.lock();
             crdt.join(delta);
             seq_to_delta[seq++] = delta;
-            mtx.unlock();
             
             cout << crdt << endl;
           }
+          mtx.unlock();
 
           proto::message ack;
           ack.set_type(proto::message::ACK);
@@ -117,6 +119,10 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
           id_and_port(parts.at(i), replica_id, replica_port);
           int replica_fd = helper::net::connect_to(host, replica_port);
 
+          mtx.lock();
+          socket_server.add_fd(replica_fd);
+          socket_server.set_id(replica_fd, replica_id);
+          mtx.unlock();
 
           // tell that replica my id
           proto::message message;
@@ -124,11 +130,6 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
           message.set_id(my_id);
           message.set_seq(0); // can be zero right?
           helper::pb::send(replica_fd, message);
-          
-          mtx.lock();
-          socket_server.add_fd(replica_fd);
-          socket_server.set_id(replica_fd, replica_id);
-          mtx.unlock();
         }
       } 
       else cout << "Unrecognized option" << endl;
@@ -136,11 +137,32 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
   }
 }
 
+void garbage_collect_deltas(map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, mutex& mtx)
+{
+  if(seq_to_delta.empty()) return; // if nothing to collect
+
+  map<int, twopset<string>> new_seq_to_delta;
+  mtx.lock();
+
+  vector<int> acks = helper::map::values(id_to_ack);
+  int min = helper::min(acks);
+
+  for(const auto& kv : seq_to_delta)
+    if(kv.first >= min)
+      new_seq_to_delta.emplace(kv.first, kv.second);
+
+  seq_to_delta = new_seq_to_delta;
+  mtx.unlock();
+}
+
 void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
-  // 22 periodically
   sleep(10);
 
+  // 30 garbage collect deltas
+  garbage_collect_deltas(seq_to_delta, id_to_ack, mtx);
+
+  // 22 periodically ship delta-interval or state
   int replica_id, replica_fd, this_seq;
   twopset<string> delta;
   bool should_gossip = false;
@@ -154,7 +176,8 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
     replica_fd = id_to_fd[replica_id];
 
     int last_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
-    int min = *helper::map::keys(seq_to_delta).begin();
+    set<int> seqs = helper::map::keys(seq_to_delta);
+    int min = helper::min(seqs);
 
     // 24
     bool whole_state = seq_to_delta.empty() || min > last_ack;

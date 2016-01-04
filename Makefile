@@ -5,7 +5,7 @@ PB_FLAGS = `pkg-config --cflags protobuf`
 PB_LIBS = `pkg-config --libs protobuf`
 COMPILED_FILES = message.pb.o csocket.o csocketserver.o helpers.o
 
-all: delta-tests proto-tests replicas chat
+all: delta-tests proto-tests chat replicas
 
 delta-tests: message-proto delta-tests.cc
 	$(CC) $(FLAGS) delta-tests.cc -o delta-tests $(PB_LIBS)
@@ -15,9 +15,13 @@ proto-tests: message-proto proto-tests.cc
 	$(CC) $(FLAGS) proto-tests.cc message.pb.o -o proto-tests $(PB_LIBS)
 	./proto-tests
 
-chat: csock chat/client.cc chat/server.cc
-	$(CC) $(FLAGS) chat/client.cc $(COMPILED_FILES) -o client $(PB_LIBS)
+chat: csock chat_server chat_client
+
+chat_server:
 	$(CC) $(FLAGS) chat/server.cc $(COMPILED_FILES) -o server $(PB_LIBS)
+
+chat_client:
+	$(CC) $(FLAGS) chat/client.cc $(COMPILED_FILES) -o client $(PB_LIBS)
 
 replicas: csock replicas/replica.cc
 	$(CC) $(FLAGS) replicas/replica.cc $(COMPILED_FILES) -o replica $(PB_LIBS)
