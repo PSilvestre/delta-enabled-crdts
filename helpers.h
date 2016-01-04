@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <random>
 #include "message.pb.h"
 
 const int MAX_HEADER_SIZE = 4;
@@ -12,9 +13,27 @@ const int BACKLOG_QUEUE_SIZE = 128;
 
 using namespace std;
 
-void error (const char *msg);
+void error(const char *msg);
 
 namespace helper {
+  template <typename T>
+  T random(vector<T> v)
+  {
+    random_device rd;
+    default_random_engine e(rd());
+    uniform_int_distribution<int> dist(0, v.size() - 1);
+    int index = dist(e);
+    return v.at(index);
+  }
+
+  template <typename T>
+  T random(set<T> s)
+  {
+    vector<T> v;
+    for(const auto& e : s) v.push_back(e);
+    return random(v);
+  }
+
   namespace net {
     int connect_to(char* host, int port);
     int listen_on(int port);

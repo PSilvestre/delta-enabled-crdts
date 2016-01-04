@@ -17,7 +17,7 @@ using namespace google::protobuf::io;
 const int MAX_HEADER_SIZE = 4;
 const int BACKLOG_QUEUE_SIZE = 128;
 
-void error (const char *msg)
+void error(const char *msg)
 {
   cerr << msg << endl;
   exit(0);

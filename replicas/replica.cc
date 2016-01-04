@@ -7,7 +7,6 @@
 #include <map>
 #include <mutex>
 #include <thread>
-#include <random>
 #include "../delta-crdts.cc"
 #include "../csock/csocket.h"
 #include "../csock/csocketserver.h"
@@ -17,8 +16,6 @@
 using namespace std;
 
 void id_and_port(string s, int& id, int& port);
-template <typename T> T random(set<T> s);
-template <typename T> T random(vector<T> v);
 
 void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
@@ -153,7 +150,7 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
   {
     mtx.lock();
     set<int> ids = helper::map::keys(id_to_fd);
-    replica_id = random(ids);
+    replica_id = helper::random(ids);
     replica_fd = id_to_fd[replica_id];
 
     int last_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
@@ -257,23 +254,5 @@ void id_and_port(string s, int& id, int& port)
   vector<string> v = helper::str::split(s, ':');
   id = atoi(v.at(0).c_str());
   port = atoi(v.at(1).c_str());
-}
-
-template <typename T>
-T random(set<T> s)
-{
-  vector<T> v;
-  for(const auto& e : s) v.push_back(e);
-  return random(v);
-}
-
-template <typename T>
-T random(vector<T> v)
-{
-  random_device rd;
-  default_random_engine e(rd());
-  uniform_int_distribution<int> dist(0, v.size() - 1);
-  int index = dist(e);
-  return v.at(index);
 }
 
