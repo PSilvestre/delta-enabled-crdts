@@ -32,8 +32,9 @@ You'll see the following message:
 Usage:
 add [elems]
 rmv [elems]
-connect [unique_id:host:port]
 show
+connect [unique_id:host:port]
+wait seconds
 ```
 
 Then you can start updating your replicas.

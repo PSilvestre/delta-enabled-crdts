@@ -84,8 +84,9 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
   cout << "Usage:\n";
   cout << "add [elems]\n";
   cout << "rmv [elems]\n";
+  cout << "show\n";
   cout << "connect [unique_id:host:port]\n";
-  cout << "show" << endl;
+  cout << "wait seconds" << endl;
 
   string line;
   while(getline(cin, line))
@@ -137,6 +138,11 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
           helper::pb::send(replica_fd, message);
         }
       } 
+      else if(parts.front() == "wait" && parts.size() > 1)
+      {
+        int seconds = atoi(parts.at(1).c_str());
+        sleep(seconds);
+      }
       else cout << "Unrecognized option" << endl;
     }
   }
