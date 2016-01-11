@@ -1,4 +1,0 @@
-connect 12:localhost:3012
-connect 10:localhost:3010
-connect 4:localhost:3004
-connect 6:localhost:3006

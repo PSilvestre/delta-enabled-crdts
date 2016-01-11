@@ -6,7 +6,8 @@
 
 import networkx as nx
 import matplotlib.pyplot as plt
-import os
+import sys
+from os import system
 
 def show(graph):
   print graph.edges()
@@ -14,7 +15,7 @@ def show(graph):
   plt.show()
  
 def save(file_name, graph):
-  with open("network/" + file_name, "w") as file:
+  with open(topologies_config_dir + file_name, "w") as file:
     for edge in graph.edges():
       file.write(str(edge[0]) + " " + str(edge[1]) + "\n")
 
@@ -39,8 +40,13 @@ def random_graph():
   show(graph)
   save("graph.cfg", graph)
 
+if(len(sys.argv) < 2):
+  print "Usage: " + sys.argv[0] + " TOPOLOGIES_CONFIG_DIR"
+  sys.exit()
 
-os.system("rm -f network/*.cfg")
+topologies_config_dir = sys.argv[1]
+system("rm -f " + topologies_config_dir + "*.cfg")
+
 random_ring()
 random_tree()
 random_graph()

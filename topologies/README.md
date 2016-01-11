@@ -4,16 +4,20 @@
 
 ```bash
 $ chmod u+x networkx.sh
-$ ./networkx.sh
+$ ./networkx.sh config/
 ```
 
 This generates three files:
-- __network/ring.cfg__
-- __network/tree.cfg__
-- __network/graph.cfg__
-
+- __config/ring.cfg__
+- __config/tree.cfg__
+- __config/graph.cfg__
 
 Each line of these files contains two ids. 
+
+__Usage:__
+```bash
+$ ./networkx.sh TOPOLOGIES_CONFIG_DIR
+```
 
 __Example:__
 
@@ -24,18 +28,18 @@ If "0 1" is on one of the lines, then, in that topology, replica 0 will be conne
 
 ```bash
 $ chmod u+x process_graph_config.sh
-$ ./process_graph_config.sh replicas.cfg network/ring.cfg 
+$ ./process_graph_config.sh replicas.cfg config/ring.cfg cmd/ 
 ```
 
 This generates some files:
-- __cmds/0.cmds__
-- __cmds/1.cmds__
-- __cmds/2.cmds__
+- __cmd/0.cmds__
+- __cmd/1.cmds__
+- __cmd/2.cmds__
 - ...
 
 __Usage:__
 ```bash
-$ ./process_graph_config.sh REPLICAS_CONFIG GRAPH_CONFIG
+$ ./process_graph_config.sh REPLICAS_CONFIG TOPOLOGY_CONFIG REPLICAS_COMMANDS_DIR 
 ```
 
 __Example:__
