@@ -39,6 +39,10 @@ with open(topology_config, "r") as file:
     else:
       commands[fst] = [connect]
 
+    # the following should be moved to another script where o generate all commands that are not connect, e.g., add, rmv, show...
+    add = "add "  + fst
+    commands[fst].append(add)
+
 for replica_id, connects in commands.iteritems():
   replicas.remove(replica_id)
   with open(replicas_commands_dir + replica_id + ".cmds", "w") as file:

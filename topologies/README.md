@@ -51,9 +51,11 @@ If "1 2" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has
 
 ### Start replicas
 
+Make sure you run `make replicas` in the root of the repository before the following commands.
+
 ```bash
 $ chmod u+x start-replicas.sh
-$ ./start-replicas.sh replicas.cfg cmd/ log/ | bash
+$ ./start-replicas.sh replicas.cfg cmd/ log/ | bash && tail -f log/*
 ```
 
 The above starts all replicas that have commands to be executed in __REPLICAS_COMMANDS_DIR__.
