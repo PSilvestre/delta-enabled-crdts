@@ -44,7 +44,7 @@ $ ./process_graph_config.sh REPLICAS_CONFIG TOPOLOGY_CONFIG REPLICAS_COMMANDS_DI
 
 __Example:__
 
-If "0 1" is on one of the lines of __network/ring.cfg__, and __replicas.cfg__ has the line "1 localhost 3001", then the file __cmds/0.cmds__ will have the line "connect 1:localhost:3001".
+If "0 1" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has the line "1 localhost 3001", then the file __cmd/0.cmds__ will have the line "connect 1:localhost:3001".
 
-If "1 2" is on one of the lines of __network/ring.cfg__, and __replicas.cfg__ has the line "2 localhost 3002", then the file __cmds/1.cmds__ will have the line "connect 2:localhost:3002".
+If "1 2" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has the line "2 localhost 3002", then the file __cmd/1.cmds__ will have the line "connect 2:localhost:3002".
 
