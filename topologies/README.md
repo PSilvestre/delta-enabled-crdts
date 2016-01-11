@@ -24,7 +24,7 @@ __Example:__
 If "0 1" is on one of the lines, then, in that topology, replica 0 will be connected to replica 1.
 
 
-### Connects
+### Generate replicas commands
 
 ```bash
 $ chmod u+x process_graph_config.sh
@@ -48,3 +48,15 @@ If "0 1" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has
 
 If "1 2" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has the line "2 localhost 3002", then the file __cmd/1.cmds__ will have the line "connect 2:localhost:3002".
 
+
+### Start replicas
+
+```bash
+$ chmod u+x start-replicas.sh
+$ ./start-replicas.sh replicas.cfg cmd/
+```
+
+__Usage:__
+```bash
+$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR
+```

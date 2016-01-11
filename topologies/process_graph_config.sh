@@ -42,6 +42,7 @@ with open(topology_config, "r") as file:
 for replica_id, connects in commands.iteritems():
   replicas.remove(replica_id)
   with open(replicas_commands_dir + replica_id + ".cmds", "w") as file:
+    file.write("wait 5\n")
     for connect in connects:
       file.write(connect + "\n")
 
