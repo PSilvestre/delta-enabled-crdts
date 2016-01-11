@@ -7,7 +7,7 @@ $ chmod u+x networkx.sh
 $ ./networkx.sh config/
 ```
 
-This generates three files:
+The above generates three files:
 - __config/ring.cfg__
 - __config/tree.cfg__
 - __config/graph.cfg__
@@ -31,7 +31,7 @@ $ chmod u+x process_graph_config.sh
 $ ./process_graph_config.sh replicas.cfg config/ring.cfg cmd/ 
 ```
 
-This generates some files:
+The above generates some files:
 - __cmd/0.cmds__
 - __cmd/1.cmds__
 - __cmd/2.cmds__
@@ -53,10 +53,13 @@ If "1 2" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has
 
 ```bash
 $ chmod u+x start-replicas.sh
-$ ./start-replicas.sh replicas.cfg cmd/
+$ ./start-replicas.sh replicas.cfg cmd/ log/ | bash
 ```
+
+The above starts all replicas that have commands to be executed in __REPLICAS_COMMANDS_DIR__.
 
 __Usage:__
 ```bash
-$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR
+$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR
 ```
+
