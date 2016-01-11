@@ -6,6 +6,7 @@
 
 import networkx as nx
 import matplotlib.pyplot as plt
+import os
 
 def show(graph):
   print graph.edges()
@@ -13,7 +14,7 @@ def show(graph):
   plt.show()
  
 def save(file_name, graph):
-  with open("config/" + file_name, "w") as file:
+  with open("network/" + file_name, "w") as file:
     for edge in graph.edges():
       file.write(str(edge[0]) + " " + str(edge[1]) + "\n")
 
@@ -39,6 +40,7 @@ def random_graph():
   save("graph.cfg", graph)
 
 
+os.system("rm -f network/*.cfg")
 random_ring()
 random_tree()
 random_graph()
