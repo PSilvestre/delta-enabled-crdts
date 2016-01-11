@@ -32,7 +32,6 @@ with open(graph_config, "r") as file:
 
 
 for replicaId, connects in commands.iteritems():
-  print replicaId
   with open("cmds/" + replicaId + ".cmds", "w") as file:
     for connect in connects:
       file.write(connect + "\n")
