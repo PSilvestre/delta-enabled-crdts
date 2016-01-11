@@ -32,7 +32,7 @@ You'll see the following message:
 Usage:
 add [elems]
 rmv [elems]
-connect [unique_id:port]
+connect [unique_id:host:port]
 show
 ```
 
@@ -52,7 +52,7 @@ rmv b
 - on the __second__ replica:
 
 ```bash
-connect 1:3001
+connect 1:localhost:3001
 ```
 
 Eventually you'll see this on the __second__ replica:

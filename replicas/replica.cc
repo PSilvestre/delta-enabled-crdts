@@ -15,7 +15,8 @@
 
 using namespace std;
 
-void id_and_port(string s, int& id, int& port);
+void id_and_port(string& s, int& id, int& port);
+void id_host_and_port(string& s, int& id, string& host, int& port);
 
 void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
@@ -83,7 +84,7 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
   cout << "Usage:\n";
   cout << "add [elems]\n";
   cout << "rmv [elems]\n";
-  cout << "connect [unique_id:port]\n";
+  cout << "connect [unique_id:host:port]\n";
   cout << "show" << endl;
 
   string line;
@@ -112,12 +113,16 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
       else if(parts.front() == "show") cout << crdt << endl;
       else if(parts.front() == "connect")
       {
-        char host[] = "localhost";
         for(int i = 1; i < parts.size(); i++)
         {
           int replica_id, replica_port;
-          id_and_port(parts.at(i), replica_id, replica_port);
-          int replica_fd = helper::net::connect_to(host, replica_port);
+          string host;
+          id_host_and_port(parts.at(i), replica_id, host, replica_port);
+
+          char* host_ = new char[host.length() + 1];
+          strcpy(host_, host.c_str());
+
+          int replica_fd = helper::net::connect_to(host_, replica_port);
 
           mtx.lock();
           socket_server.add_fd(replica_fd);
@@ -272,10 +277,18 @@ int main(int argc, char *argv[])
   return 0;
 }
 
-void id_and_port(string s, int& id, int& port)
+void id_and_port(string& s, int& id, int& port)
 {
   vector<string> v = helper::str::split(s, ':');
   id = atoi(v.at(0).c_str());
   port = atoi(v.at(1).c_str());
 }
 
+void id_host_and_port(string& s, int& id, string& host, int& port)
+{
+  vector<string> v = helper::str::split(s, ':');
+
+  id = atoi(v.at(0).c_str());
+  host = v.at(1);
+  port = atoi(v.at(2).c_str());
+}
