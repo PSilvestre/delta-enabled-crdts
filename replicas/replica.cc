@@ -254,17 +254,6 @@ int main(int argc, char *argv[])
       ref(mtx)
   );
 
-  thread kr(
-      keyboard_reader,
-      id,
-      ref(seq),
-      ref(crdt),
-      ref(seq_to_delta),
-      ref(id_to_ack),
-      ref(socket_server),
-      ref(mtx)
-  );
-
   thread g(
       gossiper,
       id,
@@ -276,8 +265,17 @@ int main(int argc, char *argv[])
       ref(mtx)
   );
 
+  keyboard_reader(
+      id,
+      ref(seq),
+      ref(crdt),
+      ref(seq_to_delta),
+      ref(id_to_ack),
+      ref(socket_server),
+      ref(mtx)
+  );
+
   sr.join();
-  kr.join();
   g.join();
 
   return 0;
