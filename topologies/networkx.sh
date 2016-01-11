@@ -13,10 +13,9 @@ def show(graph):
   plt.show()
  
 def save(file_name, graph):
-  file = open("config/" + file_name, "w")
-  for edge in graph.edges():
-    file.write(str(edge[0]) + " " + str(edge[1]) + "\n")
-  file.close()
+  with open("config/" + file_name, "w") as file:
+    for edge in graph.edges():
+      file.write(str(edge[0]) + " " + str(edge[1]) + "\n")
 
 def random_ring():
   nodes = 13
