@@ -65,3 +65,10 @@ __Usage:__
 $ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR
 ```
 
+### Stop replicas
+
+```bash
+$ chmod u+x stop-replicas.sh
+$ ./stop-replicas.sh
+```
+
