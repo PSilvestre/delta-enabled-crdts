@@ -23,9 +23,11 @@ with open(replicas_config, "r") as file:
     config[id] = [host, port]
 
 print "rm .PIDS"
- 
+
 for commands in commands_files:
   replica_id = commands.split(".")[0]
+  if (replica_id == ''):
+    continue
   replica_port = config[replica_id][1]
 
   start_command = "./../replica " + replica_id + ":" + replica_port + " 2>&1 > " + logs_dir + replica_id + ".log < " + replicas_commands_dir + commands + " &"
