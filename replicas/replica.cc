@@ -46,6 +46,8 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
           // 9 on receive(delta, d, n)
           twopset<string> delta;
           message >> delta;
+          int replica_id = message.id();
+          int message_seq = message.seq();
 
           mtx.lock();
           if(!(delta <= crdt))
@@ -54,6 +56,11 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
             crdt.join(delta);
             seq_to_delta[seq++] = delta;
 
+            // NEW
+            int current_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
+            int max = current_ack > message_seq ? current_ack : message_seq;
+            id_to_ack[replica_id] = max;
+
             log_new_state(crdt);
           }
           mtx.unlock();
@@ -61,9 +68,9 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
           proto::message ack;
           ack.set_type(proto::message::ACK);
           ack.set_id(my_id);
-          ack.set_seq(message.seq());
+          ack.set_seq(message_seq);
 
-          int replica_fd = socket_server.id_to_fd()[message.id()];
+          int replica_fd = socket_server.id_to_fd()[replica_id];
           helper::pb::send(replica_fd, ack);
         }
         else if(message.type() == proto::message::ACK)
@@ -95,9 +102,9 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
     vector<string> parts = helper::str::split(line, ' ');
     if(!parts.empty())
     {
+      log_op(line);
       if(parts.front() == "add" || parts.front() == "rmv")
       {
-        log_op(line);
         // 17 on operation
         twopset<string> delta;
 
@@ -168,7 +175,7 @@ void garbage_collect_deltas(map<int, twopset<string>>& seq_to_delta, map<int, in
 
 void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
-  sleep(10);
+  sleep(1);
 
   // 30 garbage collect deltas
   garbage_collect_deltas(seq_to_delta, id_to_ack, mtx);
@@ -178,10 +185,10 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
   twopset<string> delta;
   bool should_gossip = false;
 
+  mtx.lock();
   map<int, int> id_to_fd = socket_server.id_to_fd();
   if(!id_to_fd.empty())
   {
-    mtx.lock();
     set<int> ids = helper::map::keys(id_to_fd);
     replica_id = helper::random(ids);
     replica_fd = id_to_fd[replica_id];
@@ -203,8 +210,8 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
     this_seq = seq;
     // 28
     should_gossip = last_ack < seq;
-    mtx.unlock();
   }
+  mtx.unlock();
 
   if(should_gossip)
   {
@@ -318,14 +325,10 @@ void log_bytes_received(proto::message& message)
 {
   if(REPL) return;
   cout << now();
-  if(message.type() == proto::message::TWOPSET)
-  {
-    cout << "|B|D|";
-  } else if(message.type() == proto::message::ACK)
-  {
-    cout << "|B|A|";
-  }
-  cout << message.ByteSize() << endl;
+  if(message.type() == proto::message::TWOPSET) cout << "|B|D|";
+  else if(message.type() == proto::message::ACK) cout << "|B|A|";
+  else cout << "Hmm, there's something wrong xD";
+  cout << message.id() << "|" << message.ByteSize() << endl;
 }
 
 void log_new_state(twopset<string>& crdt)
