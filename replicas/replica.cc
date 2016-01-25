@@ -7,6 +7,7 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include <time.h>
 #include "../delta-crdts.cc"
 #include "../csock/csocket.h"
 #include "../csock/csocketserver.h"
@@ -15,8 +16,16 @@
 
 using namespace std;
 
+const bool REPL = false;
+
 void id_and_port(string& s, int& id, int& port);
 void id_host_and_port(string& s, int& id, string& host, int& port);
+void show_usage();
+time_t now();
+void log_bytes_received(proto::message& message);
+void log_new_state(twopset<string>& crdt);
+void log_op(string& op);
+
 
 void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
@@ -30,6 +39,7 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
       for(const auto& kv : fd_to_new_messages)
       {
         proto::message message = kv.second;
+        log_bytes_received(message);
 
         if(message.type() == proto::message::TWOPSET)
         {
@@ -43,6 +53,8 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
             // 10 if !(d <= Xi)
             crdt.join(delta);
             seq_to_delta[seq++] = delta;
+
+            log_new_state(crdt);
           }
           mtx.unlock();
 
@@ -75,12 +87,7 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
 
 void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
-  cout << "Usage:\n";
-  cout << "add [elems]\n";
-  cout << "rmv [elems]\n";
-  cout << "show\n";
-  cout << "connect [unique_id:host:port]\n";
-  cout << "wait seconds" << endl;
+  show_usage();
 
   string line;
   while(getline(cin, line))
@@ -90,6 +97,7 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
     {
       if(parts.front() == "add" || parts.front() == "rmv")
       {
+        log_op(line);
         // 17 on operation
         twopset<string> delta;
 
@@ -177,7 +185,6 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
     set<int> ids = helper::map::keys(id_to_fd);
     replica_id = helper::random(ids);
     replica_fd = id_to_fd[replica_id];
-    cout << "might gossip to " << replica_id << endl;
 
     int last_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
     set<int> seqs = helper::map::keys(seq_to_delta);
@@ -206,7 +213,6 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
     message.set_id(my_id);
     message.set_seq(this_seq);
     helper::pb::send(replica_fd, message);
-    cout << "just gossip to " << replica_id << endl;
   }
 
   gossiper(my_id, seq, crdt, seq_to_delta, id_to_ack, socket_server, mtx);
@@ -288,4 +294,51 @@ void id_host_and_port(string& s, int& id, string& host, int& port)
   id = atoi(v.at(0).c_str());
   host = v.at(1);
   port = atoi(v.at(2).c_str());
+}
+
+void show_usage()
+{
+  if(!REPL) return;
+  cout << "Usage:\n";
+  cout << "add [elems]\n";
+  cout << "rmv [elems]\n";
+  cout << "show\n";
+  cout << "connect [unique_id:host:port]\n";
+  cout << "wait seconds" << endl;
+}
+
+time_t now()
+{
+  time_t timer;
+  time(&timer);
+  return timer;
+}
+
+void log_bytes_received(proto::message& message)
+{
+  if(REPL) return;
+  cout << now();
+  if(message.type() == proto::message::TWOPSET)
+  {
+    cout << "|B|D|";
+  } else if(message.type() == proto::message::ACK)
+  {
+    cout << "|B|A|";
+  }
+  cout << message.ByteSize() << endl;
+}
+
+void log_new_state(twopset<string>& crdt)
+{
+  if(REPL) return;
+  cout << now() << "|S|";
+  for(const auto& e : crdt.read())
+    cout << e << ",";
+  cout << endl;
+}
+
+void log_op(string& op)
+{
+  if(REPL) return;
+  cout << now() << "|O|" << op << endl; 
 }
