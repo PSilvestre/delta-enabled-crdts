@@ -873,6 +873,19 @@ public:
 
 };
 
+template<typename T>
+bool contained(set<T> a, set<T> b)
+{
+  if(a.empty()) return false;
+
+  for(auto e : a)
+  {
+    bool c = b.count(e);
+    if(!c) return false;
+  }
+
+  return true;
+}
 
 template<typename T, typename K=string> // Map embedable datatype
 class twopset
@@ -896,6 +909,11 @@ public:
   bool operator == ( const twopset<T>& o ) const 
   { 
     return s==o.s && t==o.t; 
+  }
+
+  bool operator <= ( const twopset<T>& o ) const
+  {
+    return contained(s, o.s) || contained(t, o.t);
   }
 
   bool in (const T& val) 
