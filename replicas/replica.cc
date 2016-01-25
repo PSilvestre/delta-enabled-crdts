@@ -38,17 +38,11 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
           message >> delta;
 
           mtx.lock();
-          if(!(crdt == delta))
+          if(!(delta <= crdt))
           {
-            // 10 if d > Xi
-            // since less than (partial order) is not defined in delta-crdts.cc
-            // just test if it's different
-            // TODO fix this
-
+            // 10 if !(d <= Xi)
             crdt.join(delta);
             seq_to_delta[seq++] = delta;
-            
-            cout << crdt << endl;
           }
           mtx.unlock();
 
@@ -108,8 +102,6 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
 
         seq_to_delta[seq++] = delta;
         mtx.unlock();
-
-        cout << crdt << endl;
       } 
       else if(parts.front() == "show") cout << crdt << endl;
       else if(parts.front() == "connect")
@@ -185,6 +177,7 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
     set<int> ids = helper::map::keys(id_to_fd);
     replica_id = helper::random(ids);
     replica_fd = id_to_fd[replica_id];
+    cout << "might gossip to " << replica_id << endl;
 
     int last_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
     set<int> seqs = helper::map::keys(seq_to_delta);
