@@ -23,6 +23,7 @@ with open(replicas_config, "r") as file:
     config[id] = [host, port]
 
 print "rm .PIDS"
+print "rm log/*.log"
 
 for commands in commands_files:
   replica_id = commands.split(".")[0]

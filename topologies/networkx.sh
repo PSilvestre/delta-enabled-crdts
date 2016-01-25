@@ -20,7 +20,7 @@ def save(file_name, graph):
       file.write(str(edge[0]) + " " + str(edge[1]) + "\n")
 
 def random_ring():
-  nodes = 5
+  nodes = 13
   ring = nx.cycle_graph(nodes)
   show(ring)
   save("ring.cfg", ring)
