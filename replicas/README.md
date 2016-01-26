@@ -8,8 +8,12 @@ $ make replicas
 
 __Usage:__ 
 ```bash
-$ ./replica unique_id:port
+$ ./replica unique_id:port [-r] [-s gossip_sleep_time]
 ```
+
+If __-r__ is passed as argument, __replica__ will be ran on "REPL mode".
+
+If __-s__ is passed, it's expected an aditional argument: __gossip_sleep_time__. This is the number of seconds between each gossip. By default is __10__ seconds.
 
 ## Example with two replicas
 
@@ -18,13 +22,13 @@ With two terminals open:
 - in the __first__ one:
 
 ```bash
-$ ./replica 1:3001
+$ ./replica 1:3001 -r
 ```
 
 - in the __second__:
 
 ```bash
-$ ./replica 2:3002
+$ ./replica 2:3002 -r
 ```
 
 You'll see the following message:

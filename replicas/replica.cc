@@ -15,12 +15,14 @@
 #include "../message.pb.h"
 
 using namespace std;
-
-const bool REPL = false;
+bool REPL = false;
 
 void id_and_port(string& s, int& id, int& port);
 void id_host_and_port(string& s, int& id, string& host, int& port);
+
 void show_usage();
+void show_crdt(twopset<string>& crdt);
+
 time_t now();
 void log_bytes_received(proto::message& message);
 void log_new_state(twopset<string>& crdt);
@@ -57,11 +59,12 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
             seq_to_delta[seq++] = delta;
 
             // NEW
-            int current_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
-            int max = current_ack > message_seq ? current_ack : message_seq;
-            id_to_ack[replica_id] = max;
+            //int current_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
+            //int max = current_ack > message_seq ? current_ack : message_seq;
+            //id_to_ack[replica_id] = max;
 
             log_new_state(crdt);
+            show_crdt(crdt);
           }
           mtx.unlock();
 
@@ -114,6 +117,8 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
           if(parts.front() == "add") delta.join(crdt.add(parts.at(i)));
           else delta.join(crdt.rmv(parts.at(i)));
         }
+
+        show_crdt(crdt);
 
         seq_to_delta[seq++] = delta;
         mtx.unlock();
@@ -173,12 +178,12 @@ void garbage_collect_deltas(map<int, twopset<string>>& seq_to_delta, map<int, in
   mtx.unlock();
 }
 
-void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
+void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx, int& gossip_sleep_time)
 {
-  sleep(1);
+  sleep(gossip_sleep_time);
 
   // 30 garbage collect deltas
-  garbage_collect_deltas(seq_to_delta, id_to_ack, mtx);
+  //garbage_collect_deltas(seq_to_delta, id_to_ack, mtx);
 
   // 22 periodically ship delta-interval or state
   int replica_id, replica_fd, this_seq;
@@ -222,20 +227,29 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
     helper::pb::send(replica_fd, message);
   }
 
-  gossiper(my_id, seq, crdt, seq_to_delta, id_to_ack, socket_server, mtx);
+  gossiper(my_id, seq, crdt, seq_to_delta, id_to_ack, socket_server, mtx, gossip_sleep_time);
 }
 
 int main(int argc, char *argv[])
 {
   if(argc < 2)
   {
-    cerr << "Usage: " << argv[0] << " unique_id:port" << endl;
+    cerr << "Usage: " << argv[0] << " unique_id:port [-r] [-s gossip_sleep_time]" << endl;
     exit(0);
   } 
 
+  int gossip_sleep_time = 10;
   int id, port;
   string arg(argv[1]);
   id_and_port(arg, id, port);
+
+  for(int i = 2; i < argc; i++)
+  {
+    string arg(argv[i]);
+    if(arg == "-r") REPL = true;
+    else if(arg == "-s") gossip_sleep_time = atoi(argv[++i]);
+    // TODO deal with bad usage
+  }
 
   int socket_server_fd = helper::net::listen_on(port);
   csocketserver socket_server(socket_server_fd);
@@ -268,7 +282,8 @@ int main(int argc, char *argv[])
       ref(seq_to_delta),
       ref(id_to_ack),
       ref(socket_server),
-      ref(mtx)
+      ref(mtx),
+      ref(gossip_sleep_time)
   );
 
   keyboard_reader(
@@ -312,6 +327,12 @@ void show_usage()
   cout << "show\n";
   cout << "connect [unique_id:host:port]\n";
   cout << "wait seconds" << endl;
+}
+
+void show_crdt(twopset<string>& crdt)
+{
+  if(!REPL) return;
+  cout << crdt << endl;
 }
 
 time_t now()
