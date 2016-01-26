@@ -183,7 +183,7 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
   sleep(gossip_sleep_time);
 
   // 30 garbage collect deltas
-  //garbage_collect_deltas(seq_to_delta, id_to_ack, mtx);
+  garbage_collect_deltas(seq_to_delta, id_to_ack, mtx);
 
   // 22 periodically ship delta-interval or state
   int replica_id, replica_fd, this_seq;
@@ -318,21 +318,29 @@ void id_host_and_port(string& s, int& id, string& host, int& port)
   port = atoi(v.at(2).c_str());
 }
 
+mutex stdout_mtx;
+void l() { stdout_mtx.lock(); }
+void ul() {stdout_mtx.unlock(); }
+
 void show_usage()
 {
   if(!REPL) return;
+  l();
   cout << "Usage:\n";
   cout << "add [elems]\n";
   cout << "rmv [elems]\n";
   cout << "show\n";
   cout << "connect [unique_id:host:port]\n";
   cout << "wait seconds" << endl;
+  ul();
 }
 
 void show_crdt(twopset<string>& crdt)
 {
   if(!REPL) return;
+  l();
   cout << crdt << endl;
+  ul();
 }
 
 time_t now()
@@ -345,24 +353,35 @@ time_t now()
 void log_bytes_received(proto::message& message)
 {
   if(REPL) return;
+  l();
   cout << now();
   if(message.type() == proto::message::TWOPSET) cout << "|B|D|";
   else if(message.type() == proto::message::ACK) cout << "|B|A|";
-  else cout << "Hmm, there's something wrong xD";
-  cout << message.id() << "|" << message.ByteSize() << endl;
+  else
+  {
+    cout << "Hmm, there's something wrong xD\n";
+    helper::pb::show(message);
+    cout << endl;
+  }
+  cout << message.id() << "|" << message.seq() << "|" << message.ByteSize() << endl;
+  ul();
 }
 
 void log_new_state(twopset<string>& crdt)
 {
   if(REPL) return;
+  l();
   cout << now() << "|S|";
   for(const auto& e : crdt.read())
     cout << e << ",";
   cout << endl;
+  ul();
 }
 
 void log_op(string& op)
 {
   if(REPL) return;
+  l();
   cout << now() << "|O|" << op << endl; 
+  ul();
 }
