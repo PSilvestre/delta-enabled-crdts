@@ -8,6 +8,7 @@
 #include <mutex>
 #include <thread>
 #include <time.h>
+#include <utility> // pair
 #include "../delta-crdts.cc"
 #include "../csock/csocket.h"
 #include "../csock/csocketserver.h"
@@ -29,7 +30,7 @@ void log_new_state(twopset<string>& crdt);
 void log_op(string& op);
 
 
-void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
+void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, twopset<string>>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
   while(true)
   {
@@ -56,12 +57,8 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
           {
             // 10 if !(d <= Xi)
             crdt.join(delta);
-            seq_to_delta[seq++] = delta;
-
             // NEW
-            //int current_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
-            //int max = current_ack > message_seq ? current_ack : message_seq;
-            //id_to_ack[replica_id] = max;
+            seq_to_delta[seq++] = make_pair(replica_id, delta);
 
             log_new_state(crdt);
             show_crdt(crdt);
@@ -95,7 +92,7 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<
   }
 }
 
-void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
+void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, twopset<string>>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx)
 {
   show_usage();
 
@@ -120,7 +117,8 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
 
         show_crdt(crdt);
 
-        seq_to_delta[seq++] = delta;
+        // NEW
+        seq_to_delta[seq++] = make_pair(my_id, delta);
         mtx.unlock();
       } 
       else if(parts.front() == "show") cout << crdt << endl;
@@ -160,11 +158,11 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, twopse
   }
 }
 
-void garbage_collect_deltas(map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, mutex& mtx)
+void garbage_collect_deltas(map<int, pair<int, twopset<string>>>& seq_to_delta, map<int, int>& id_to_ack, mutex& mtx)
 {
   if(seq_to_delta.empty()) return; // if nothing to collect
 
-  map<int, twopset<string>> new_seq_to_delta;
+  map<int, pair<int, twopset<string>>> new_seq_to_delta;
   mtx.lock();
 
   vector<int> acks = helper::map::values(id_to_ack);
@@ -178,7 +176,7 @@ void garbage_collect_deltas(map<int, twopset<string>>& seq_to_delta, map<int, in
   mtx.unlock();
 }
 
-void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<string>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx, int& gossip_sleep_time)
+void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, twopset<string>>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx, int& gossip_sleep_time)
 {
   sleep(gossip_sleep_time);
 
@@ -209,12 +207,17 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, twopset<strin
     else
     {
       for(int i = last_ack; i < seq; i++)
-        delta.join(seq_to_delta[i]);
+      {
+        // NEW
+        int from = seq_to_delta[i].first;
+        if(from != replica_id) delta.join(seq_to_delta[i].second);
+      }
     }
 
     this_seq = seq;
     // 28
-    should_gossip = last_ack < seq;
+    // NEW
+    should_gossip = last_ack < seq && delta.read().size() > 0;
   }
   mtx.unlock();
 
@@ -260,7 +263,7 @@ int main(int argc, char *argv[])
   int seq = 0;
   twopset<string> crdt;
   // 6 volatile state:
-  map<int, twopset<string>> seq_to_delta;
+  map<int, pair<int, twopset<string>>> seq_to_delta;
   map<int, int> id_to_ack;
 
   thread sr(
@@ -355,7 +358,15 @@ void log_bytes_received(proto::message& message)
   if(REPL) return;
   l();
   cout << now();
-  if(message.type() == proto::message::TWOPSET) cout << "|B|D|";
+  if(message.type() == proto::message::TWOPSET)
+  {
+    cout << "|B|D|";
+    twopset<string> crdt;
+    message >> crdt;
+    for(auto& e : crdt.read())
+      cout << e << ",";
+    cout << "|";
+  }
   else if(message.type() == proto::message::ACK) cout << "|B|A|";
   else
   {
