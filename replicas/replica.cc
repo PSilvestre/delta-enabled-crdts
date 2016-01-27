@@ -367,7 +367,7 @@ void log_bytes_received(proto::message& message)
       cout << e << ",";
     cout << "|";
   }
-  else if(message.type() == proto::message::ACK) cout << "|B|A|";
+  else if(message.type() == proto::message::ACK) cout << "|B|A||";
   else
   {
     cout << "Hmm, there's something wrong xD\n";
