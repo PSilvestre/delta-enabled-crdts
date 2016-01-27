@@ -72,3 +72,25 @@ $ chmod u+x stop-replicas.sh
 $ ./stop-replicas.sh
 ```
 
+
+# Charts
+
+In order to generate charts after running the tests, you need to install the following dependencies.
+
+```bash
+$ sudo pip install pygal cairosvg lxml tinycss cssselect
+```
+
+After that, you can:
+
+```bash
+$ analyse.sh log/
+```
+
+__Usage:__
+```bash
+$ analyse.sh LOGS_DIR
+```
+
+
+
