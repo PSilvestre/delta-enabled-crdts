@@ -17,6 +17,7 @@
 
 using namespace std;
 bool REPL = false;
+bool GOSSIP = true;
 
 void id_and_port(string& s, int& id, int& port);
 void id_host_and_port(string& s, int& id, string& host, int& port);
@@ -184,47 +185,60 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, two
   garbage_collect_deltas(seq_to_delta, id_to_ack, mtx);
 
   // 22 periodically ship delta-interval or state
-  int replica_id, replica_fd, this_seq;
-  twopset<string> delta;
-  bool should_gossip = false;
+  int this_seq;
+  map<int, twopset<string>> fd_to_delta;
 
   mtx.lock();
   map<int, int> id_to_fd = socket_server.id_to_fd();
   if(!id_to_fd.empty())
   {
     set<int> ids = helper::map::keys(id_to_fd);
-    replica_id = helper::random(ids);
-    replica_fd = id_to_fd[replica_id];
 
-    int last_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
-    set<int> seqs = helper::map::keys(seq_to_delta);
-    int min = helper::min(seqs);
-
-    // 24
-    bool whole_state = seq_to_delta.empty() || min > last_ack;
-
-    if(whole_state) delta = crdt;
-    else
+    if(GOSSIP)
     {
-      for(int i = last_ack; i < seq; i++)
+      int replica_id = helper::random(ids);
+      ids.clear();
+      ids.insert(replica_id);
+    }
+
+    for(auto& replica_id : ids)
+    {
+      twopset<string> delta;
+      int replica_fd = id_to_fd[replica_id];
+
+      int last_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
+      set<int> seqs = helper::map::keys(seq_to_delta);
+      int min = helper::min(seqs);
+
+      // 24
+      bool whole_state = seq_to_delta.empty() || min > last_ack;
+
+      if(whole_state) delta = crdt;
+      else
       {
-        // NEW
-        int from = seq_to_delta[i].first;
-        if(from != replica_id) delta.join(seq_to_delta[i].second);
+        for(int i = last_ack; i < seq; i++)
+        {
+          // NEW
+          int from = seq_to_delta[i].first;
+          if(from != replica_id) delta.join(seq_to_delta[i].second);
+        }
       }
+
+      // 28
+      // NEW
+      bool should_gossip = last_ack < seq && delta.read().size() > 0;
+      if(should_gossip) fd_to_delta[replica_fd] = delta;
     }
 
     this_seq = seq;
-    // 28
-    // NEW
-    should_gossip = last_ack < seq && delta.read().size() > 0;
   }
   mtx.unlock();
 
-  if(should_gossip)
+  for(auto& kv : fd_to_delta)
   {
+    int replica_fd = kv.first;
     proto::message message;
-    message << delta;
+    message << kv.second;
     message.set_id(my_id);
     message.set_seq(this_seq);
     helper::pb::send(replica_fd, message);
@@ -250,6 +264,8 @@ int main(int argc, char *argv[])
   {
     string arg(argv[i]);
     if(arg == "-r") REPL = true;
+    else if(arg == "-g") GOSSIP = true;
+    else if(arg == "-f") GOSSIP = false;
     else if(arg == "-s") gossip_sleep_time = atoi(argv[++i]);
     // TODO deal with bad usage
   }

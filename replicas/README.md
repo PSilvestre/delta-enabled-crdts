@@ -8,12 +8,17 @@ $ make replicas
 
 __Usage:__ 
 ```bash
-$ ./replica unique_id:port [-r] [-s gossip_sleep_time]
+$ ./replica unique_id:port [-r] [-s gossip_sleep_time] [-g] [-f]
 ```
 
 If __-r__ is passed as argument, __replica__ will be ran on "REPL mode".
 
-If __-s__ is passed, it's expected an aditional argument: __gossip_sleep_time__. This is the number of seconds between each gossip. By default is __10__ seconds.
+If __-s__ is passed, it's expected an additional argument: __gossip_sleep_time__. This is the number of seconds between each gossip. By default is __10__ seconds.
+
+If __-g__ is passed, when the replica is supposed to gossip, it will choose a random neighbour - __gossip__.
+
+If __-f__ is passed, when the replica is supposed to gossip, it will send to all its neighbours - __flooding__.
+
 
 ## Example with two replicas
 
