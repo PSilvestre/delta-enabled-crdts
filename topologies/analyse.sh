@@ -7,8 +7,15 @@ from os.path import isfile, join
 from sets import Set
 
 if(len(sys.argv) < 2):
-  print "Usage: " + sys.argv[0] + " LOGS_DIR"
+  print "Usage: " + sys.argv[0] + " LOGS_DIR [-s]"
   sys.exit()
+
+# when -s is passed, instead of bytes on each time, it should be the sum of all bytes until that time
+
+SUM = False
+
+if len(sys.argv) > 2 and sys.argv[2] == "-s":
+  SUM = True
 
 logs_dir = sys.argv[1]
 logs_files = [f for f in listdir(logs_dir) if isfile(join(logs_dir, f))]
@@ -120,34 +127,46 @@ delta_bytes_list = []
 ack_bytes_list = []
 convergence_list = []
 
-print times
+delta_bytes_sum = 0
+ack_bytes_sum = 0
 
 for time in times:
-  delta_bytes_list.append(time_to_delta_bytes[time])
+  delta_bytes = time_to_delta_bytes[time]
+  ack_bytes = time_to_ack_bytes[time]
+  
+  delta_bytes_sum += delta_bytes
+  ack_bytes_sum += ack_bytes
 
   if time == 0:
-    # litle ack: these acks in time zero are used to exchange ids between replicas
-    ack_bytes_list.append(0)
+    # litle ack: these acks in time zero are used to exchange ids between replicas -> these are not acks for the algorithm
+    ack_bytes_sum = 0
+
+  if SUM:
+    delta_bytes_list.append(delta_bytes_sum)
+    ack_bytes_list.append(ack_bytes_sum)
   else:
-    ack_bytes_list.append(time_to_ack_bytes[time])
+    delta_bytes_list.append(delta_bytes)
+    ack_bytes_list.append(ack_bytes)
 
   if time == convergence_time:
-    convergence_list.append({"value": convergence_time, "node": {"r" : 8}})
+    convergence_list.append({"value": 0, "node": {"r" : 8}})
   else:
     convergence_list.append(None)
 
 title = "Gossip"
-file = title + ".png"
+#title = "Flooding"
+
+filename = title
+if SUM:
+  filename += "_SUM"
+filename += ".png"
 
 chart = pygal.Line()
 chart.title = title
-chart.add("Acks", ack_bytes_list)
 chart.add("Deltas",  delta_bytes_list)
-#chart.add("Convergence", [{"value": convergence_list, "node": {"r": 8}}])
+chart.add("Acks", ack_bytes_list)
 chart.add("Convergence", convergence_list)
 
-chart.render_to_png(file)
+chart.render_to_png(filename)
 chart.render_in_browser()
-
-
 
