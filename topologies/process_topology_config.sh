@@ -39,16 +39,19 @@ with open(topology_config, "r") as file:
     else:
       commands[fst] = [connect]
 
-    # the following should be moved to another script where o generate all commands that are not connect, e.g., add, rmv, show...
-    add = "add "  + fst
-    commands[fst].append(add)
-
 for replica_id, connects in commands.iteritems():
   replicas.remove(replica_id)
   with open(replicas_commands_dir + replica_id + ".cmds", "w") as file:
     file.write("wait 5\n")
     for connect in connects:
       file.write(connect + "\n")
+
+    # this allows us to ignore acks resultant from connects
+    file.write("wait 5\n")
+
+    # the following should be moved to another script where o generate all commands that are not connect, e.g., add, rmv, show...
+    add = "add " + replica_id + "\n"
+    file.write(add)
 
 # if replicas is empty, then I have at least one command for each replica
 # if not, then there are replicas that do not have any command
