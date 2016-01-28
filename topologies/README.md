@@ -2,6 +2,15 @@
 
 ### Network
 
+In order to generate these random graphs, you need to install the following dependencies.
+
+```bash
+$ sudo pip install networkx
+$ sudo apt-get install python-matplotlib
+```
+
+After that, you can:
+
 ```bash
 $ chmod u+x networkx.sh
 $ ./networkx.sh config/
@@ -84,12 +93,13 @@ $ sudo pip install pygal cairosvg lxml tinycss cssselect
 After that, you can:
 
 ```bash
-$ analyse.sh log/
+$ chmod u+x analyse.sh
+$ ./analyse.sh log/
 ```
 
 __Usage:__
 ```bash
-$ analyse.sh LOGS_DIR
+$ ./analyse.sh LOGS_DIR
 ```
 
 

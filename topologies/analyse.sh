@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# Install:
+# $ sudo pip install pygal cairosvg lxml tinycss cssselect
+
 import sys
 import pygal
 from os import listdir
