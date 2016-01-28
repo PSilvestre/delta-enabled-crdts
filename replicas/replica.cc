@@ -18,6 +18,7 @@
 using namespace std;
 bool REPL = false;
 bool GOSSIP = true;
+bool DELTA = true;
 
 void id_and_port(string& s, int& id, int& port);
 void id_host_and_port(string& s, int& id, string& host, int& port);
@@ -213,6 +214,9 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, two
       // 24
       bool whole_state = seq_to_delta.empty() || min > last_ack;
 
+      // To support sending the whole state
+      if(!DELTA) whole_state = true;
+
       if(whole_state) delta = crdt;
       else
       {
@@ -251,7 +255,7 @@ int main(int argc, char *argv[])
 {
   if(argc < 2)
   {
-    cerr << "Usage: " << argv[0] << " unique_id:port [-r] [-s gossip_sleep_time]" << endl;
+    cerr << "Usage: " << argv[0] << " unique_id:port [-r] [-t gossip_sleep_time] [-g] [-f] [-d] [-s]" << endl;
     exit(0);
   } 
 
@@ -266,7 +270,9 @@ int main(int argc, char *argv[])
     if(arg == "-r") REPL = true;
     else if(arg == "-g") GOSSIP = true;
     else if(arg == "-f") GOSSIP = false;
-    else if(arg == "-s") gossip_sleep_time = atoi(argv[++i]);
+    else if(arg == "-d") DELTA = true;
+    else if(arg == "-s") DELTA = false;
+    else if(arg == "-t") gossip_sleep_time = atoi(argv[++i]);
     // TODO deal with bad usage
   }
 
