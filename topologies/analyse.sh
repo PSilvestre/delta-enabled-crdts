@@ -139,6 +139,8 @@ for time in times:
 
   if time == 0:
     # litle ack: these acks in time zero are used to exchange ids between replicas -> these are not acks for the algorithm
+    # TODO replace with something that assures the acks we're ignoring are the ones used to exchange ids (maybe a sleep after connect)
+    ack_bytes = 0
     ack_bytes_sum = 0
 
   if SUM:
@@ -153,17 +155,19 @@ for time in times:
   else:
     convergence_list.append(None)
 
-title = "Gossip"
-#title = "Flooding"
+#title = "Gossip"
+title = "Flooding"
+#subtitle = "(with deltas)"
+subtitle = "(without deltas)"
 
-filename = title
+filename = title + subtitle.replace("(", "_").replace(")", "_").replace(" ", "_") # replace this with a regex
 if SUM:
-  filename += "_SUM"
+  filename += "SUM"
 filename += ".png"
 
 chart = pygal.Line()
-chart.title = title
-chart.add("Deltas",  delta_bytes_list)
+chart.title = title + " " + subtitle
+chart.add("State",  delta_bytes_list)
 chart.add("Acks", ack_bytes_list)
 chart.add("Convergence", convergence_list)
 

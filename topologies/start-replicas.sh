@@ -39,7 +39,7 @@ for commands in commands_files:
   output = logs_dir + replica_id + ".log"
   input = replicas_commands_dir + commands
 
-  start_command = "{cmd} {info} -s {gossip_sleep_time} 2>&1 > {output} < {input} &".format(cmd = cmd, info = info, gossip_sleep_time = gossip_sleep_time, output = output, input = input)
+  start_command = "{cmd} {info} -t {gossip_sleep_time} -f -s 2>&1 > {output} < {input} &".format(cmd = cmd, info = info, gossip_sleep_time = gossip_sleep_time, output = output, input = input)
   print start_command
   print "echo $! >> .PIDS"
 
