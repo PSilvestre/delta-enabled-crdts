@@ -32,13 +32,12 @@ def random_tree():
   show(tree)
   save("tree.cfg", tree)
 
-def random_graph():
+def erdos_renyi():
   nodes = 13
-  neighbours = 2
-  probability_of_rewiring_each_edge = 0.5 # ?
-  graph = nx.connected_watts_strogatz_graph(nodes, neighbours, probability_of_rewiring_each_edge)
+  probability_of_edge_creation = 0.3
+  graph = nx.erdos_renyi_graph(nodes, probability_of_edge_creation)
   show(graph)
-  save("graph.cfg", graph)
+  save("erdos_renyi.cfg", graph)
 
 if(len(sys.argv) < 2):
   print "Usage: " + sys.argv[0] + " TOPOLOGIES_CONFIG_DIR"
@@ -53,6 +52,6 @@ random_ring()
 print "\nrandom tree: "
 random_tree()
 
-print "\nrandom graph: " 
-random_graph()
+print "\nerdos renyi: "
+erdos_renyi()
 
