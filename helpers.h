@@ -6,6 +6,7 @@
 #include <set>
 #include <map>
 #include <random>
+#include <algorithm> // random_shuffle
 #include "message.pb.h"
 
 const int MAX_HEADER_SIZE = 4;
@@ -16,6 +17,23 @@ using namespace std;
 void error(const char *msg);
 
 namespace helper {
+
+  template<typename T>
+  vector<T> to_vector(const set<T>& s)
+  {
+    vector<T> v;
+    for(const auto& e : s) v.push_back(e);
+    return v;
+  }
+
+  template<typename T>
+  set<T> to_set(const vector<T>& v)
+  {
+    set<T> s;
+    for(const auto& e : v) s.insert(e);
+    return s;
+  }
+
   template<typename T>
   T random(const vector<T>& v)
   {
@@ -29,9 +47,33 @@ namespace helper {
   template<typename T>
   T random(const set<T>& s)
   {
-    vector<T> v;
-    for(const auto& e : s) v.push_back(e);
+    vector<T> v = to_vector(s);
     return random(v);
+  }
+
+  template<typename T>
+  vector<T> random(const vector<T>& s, int max)
+  {
+    vector<T> res;
+    vector<T> s_ = s;
+    random_shuffle(s_.begin(), s_.end());
+
+    int count = 0;
+    for(const auto& e : s_)
+    {
+      if(count++ == max) break;
+      res.push_back(e);
+    }
+    
+    return res;
+  }
+
+  template<typename T>
+  set<T> random(const set<T>& s, int max)
+  {
+    vector<T> v = to_vector(s);
+    vector<T> res = random(v, max);
+    return to_set(res);
   }
 
   template<typename T>

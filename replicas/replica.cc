@@ -17,7 +17,6 @@
 
 using namespace std;
 bool REPL = false;
-bool GOSSIP = true;
 bool DELTA = true;
 
 void id_and_port(string& s, int& id, int& port);
@@ -178,7 +177,7 @@ void garbage_collect_deltas(map<int, pair<int, twopset<string>>>& seq_to_delta, 
   mtx.unlock();
 }
 
-void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, twopset<string>>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx, int& gossip_sleep_time)
+void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, twopset<string>>>& seq_to_delta, map<int, int>& id_to_ack, csocketserver& socket_server, mutex& mtx, int& gossip_sleep_time, int& fanout)
 {
   sleep(gossip_sleep_time);
 
@@ -195,12 +194,9 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, two
   {
     set<int> ids = helper::map::keys(id_to_fd);
 
-    if(GOSSIP)
-    {
-      int replica_id = helper::random(ids);
-      ids.clear();
-      ids.insert(replica_id);
-    }
+    cout << "SIZE " << ids.size() << endl;
+    if(fanout != -1) ids = helper::random(ids, fanout);
+    cout << "SIZE " << ids.size() << endl;
 
     for(auto& replica_id : ids)
     {
@@ -248,18 +244,20 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, two
     helper::pb::send(replica_fd, message);
   }
 
-  gossiper(my_id, seq, crdt, seq_to_delta, id_to_ack, socket_server, mtx, gossip_sleep_time);
+  gossiper(my_id, seq, crdt, seq_to_delta, id_to_ack, socket_server, mtx, gossip_sleep_time, fanout);
 }
 
 int main(int argc, char *argv[])
 {
   if(argc < 2)
   {
-    cerr << "Usage: " << argv[0] << " unique_id:port [-r] [-t gossip_sleep_time] [-g] [-f] [-d] [-s]" << endl;
+    cerr << "Usage: " << argv[0] << " unique_id:port [-r] [-t gossip_sleep_time] [-f fanout] [-d] [-s]" << endl;
     exit(0);
   } 
 
   int gossip_sleep_time = 10;
+  int fanout = 1;
+
   int id, port;
   string arg(argv[1]);
   id_and_port(arg, id, port);
@@ -268,11 +266,10 @@ int main(int argc, char *argv[])
   {
     string arg(argv[i]);
     if(arg == "-r") REPL = true;
-    else if(arg == "-g") GOSSIP = true;
-    else if(arg == "-f") GOSSIP = false;
+    else if(arg == "-t") gossip_sleep_time = atoi(argv[++i]);
+    else if(arg == "-f") fanout = atoi(argv[++i]);
     else if(arg == "-d") DELTA = true;
     else if(arg == "-s") DELTA = false;
-    else if(arg == "-t") gossip_sleep_time = atoi(argv[++i]);
     // TODO deal with bad usage
   }
 
@@ -308,7 +305,8 @@ int main(int argc, char *argv[])
       ref(id_to_ack),
       ref(socket_server),
       ref(mtx),
-      ref(gossip_sleep_time)
+      ref(gossip_sleep_time),
+      ref(fanout)
   );
 
   keyboard_reader(
