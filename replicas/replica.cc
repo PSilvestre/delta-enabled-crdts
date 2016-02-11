@@ -78,8 +78,9 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int
         else if(message.type() == proto::message::ID)
         {
           mtx.lock();
-          socket_server.set_id(kv.first, replica_id);
+          socket_server.set_id(kv.first, message.id());
           mtx.unlock();
+        }
         else if(message.type() == proto::message::ACK)
         {
           // 15 one receive (ack, n)

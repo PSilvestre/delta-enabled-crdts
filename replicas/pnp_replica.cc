@@ -71,10 +71,10 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<pair<int, int
             set<int> ids = helper::map::keys(socket_server.id_to_fd());
             ids.erase(replica_id);
             for(auto& neighbour_id : ids)
-	          {
-	            int neighbour_fd = socket_server.get_fd(neighbour_id);
-	            helper::pb::send(neighbour_fd, news_message);
-	          }
+            {
+              int neighbour_fd = socket_server.get_fd(neighbour_id);
+              helper::pb::send(neighbour_fd, news_message);
+            }
 
             log_new_state(crdt);
             show_crdt(crdt);
@@ -143,11 +143,11 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<pair<int, i
         message.set_seq(seq++);
 
         set<int> ids = helper::map::keys(socket_server.id_to_fd());
-    	  for(auto& replica_id : ids)
-    	  {
-      	  int replica_fd = socket_server.get_fd(replica_id);
+        for(auto& replica_id : ids)
+        {
+          int replica_fd = socket_server.get_fd(replica_id);
           helper::pb::send(replica_fd, message);
-    	    log_message_sent();
+          log_message_sent();
         }
 
         mtx.unlock();
