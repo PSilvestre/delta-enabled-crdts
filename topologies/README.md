@@ -87,6 +87,7 @@ $ ./stop-replicas.sh
 In order to generate charts after running the tests, you need to install the following dependencies.
 
 ```bash
+$ sudo apt-get install python-dev libffi-dev
 $ sudo pip install pygal cairosvg lxml tinycss cssselect
 ```
 

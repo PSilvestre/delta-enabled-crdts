@@ -44,7 +44,6 @@ if(len(sys.argv) < 2):
   sys.exit()
 
 topologies_config_dir = sys.argv[1]
-system("rm -f " + topologies_config_dir + "*.cfg")
 
 print "random ring: "
 random_ring()
