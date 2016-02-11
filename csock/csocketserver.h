@@ -22,6 +22,8 @@ class csocketserver
     int fd();
     set<int> connected_fd();
     map<int, int> id_to_fd();
+    int get_id(int fd);
+    int get_fd(int id);
     void add_fd(int fd);
     void remove_fd(int fd);
     void set_id(int fd, int id);

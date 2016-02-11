@@ -29,6 +29,19 @@ map<int, int> csocketserver::id_to_fd()
   return _id_to_fd;
 }
 
+int csocketserver::get_id(int fd)
+{
+  for(const auto& kv : _id_to_fd)
+    if(kv.second == fd) return kv.first;
+
+  return -1;
+}
+
+int csocketserver::get_fd(int id)
+{
+  return _id_to_fd[id];
+}
+
 void csocketserver::add_fd(int client_socket_fd)
 {
   FD_SET(client_socket_fd, &_active_fd_set);
