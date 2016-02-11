@@ -75,6 +75,11 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int
           int replica_fd = socket_server.id_to_fd()[replica_id];
           helper::pb::send(replica_fd, ack);
         }
+        else if(message.type() == proto::message::ID)
+        {
+          mtx.lock();
+          socket_server.set_id(kv.first, replica_id);
+          mtx.unlock();
         else if(message.type() == proto::message::ACK)
         {
           // 15 one receive (ack, n)
@@ -84,9 +89,7 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int
           int current_ack = id_to_ack.count(replica_id) ? id_to_ack[replica_id] : 0;
           int max = current_ack > new_ack ? current_ack : new_ack;
 
-          socket_server.set_id(kv.first, replica_id);
           id_to_ack[replica_id] = max;
-
           mtx.unlock();
         } else cout << "Can't handle messages with type " << message.type() << endl;
       }
@@ -143,11 +146,11 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<int, pair<i
           mtx.unlock();
 
           // tell that replica my id
-          proto::message message;
-          message.set_type(proto::message::ACK);
-          message.set_id(my_id);
-          message.set_seq(0); // can be zero right?
-          helper::pb::send(replica_fd, message);
+          proto::message id_message;
+          id_message.set_type(proto::message::ID);
+          id_message.set_id(my_id);
+          id_message.set_seq(0);
+          helper::pb::send(replica_fd, id_message);
         }
       } 
       else if(parts.front() == "wait" && parts.size() > 1)

@@ -70,12 +70,11 @@ void socket_reader(int my_id, int& seq, twopset<string>& crdt, map<pair<int, int
 
             set<int> ids = helper::map::keys(socket_server.id_to_fd());
             ids.erase(replica_id);
-
-	    for(auto& neighbour_id : ids)
-	    {
-	      int neighbour_fd = socket_server.get_fd(neighbour_id);
-	      helper::pb::send(neighbour_fd, news_message);
-	    }
+            for(auto& neighbour_id : ids)
+	          {
+	            int neighbour_fd = socket_server.get_fd(neighbour_id);
+	            helper::pb::send(neighbour_fd, news_message);
+	          }
 
             log_new_state(crdt);
             show_crdt(crdt);
@@ -136,8 +135,7 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<pair<int, i
         }
 
         show_crdt(crdt);
-	
-	from_seq_to_delta[make_pair(my_id, seq)] = delta;
+        from_seq_to_delta[make_pair(my_id, seq)] = delta;
 
         proto::message message;
         message << delta;
@@ -145,11 +143,11 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<pair<int, i
         message.set_seq(seq++);
 
         set<int> ids = helper::map::keys(socket_server.id_to_fd());
-    	for(auto& replica_id : ids)
-    	{
+    	  for(auto& replica_id : ids)
+    	  {
       	  int replica_fd = socket_server.get_fd(replica_id);
           helper::pb::send(replica_fd, message);
-    	  log_message_sent();
+    	    log_message_sent();
         }
 
         mtx.unlock();
@@ -177,7 +175,7 @@ void keyboard_reader(int my_id, int& seq, twopset<string>& crdt, map<pair<int, i
           proto::message id_message;
           id_message.set_type(proto::message::ID);
           id_message.set_id(my_id);
-          id_message.set_seq(0); // can be zero right?
+          id_message.set_seq(0);
           helper::pb::send(replica_fd, id_message);
         }
       } 
