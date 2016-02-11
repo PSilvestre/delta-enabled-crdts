@@ -26,6 +26,7 @@ void show_usage();
 void show_crdt(twopset<string>& crdt);
 
 time_t now();
+void log_message_sent();
 void log_bytes_received(proto::message& message);
 void log_new_state(twopset<string>& crdt);
 void log_op(string& op);
@@ -193,10 +194,7 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, two
   if(!id_to_fd.empty())
   {
     set<int> ids = helper::map::keys(id_to_fd);
-
-    cout << "SIZE " << ids.size() << endl;
     if(fanout != -1) ids = helper::random(ids, fanout);
-    cout << "SIZE " << ids.size() << endl;
 
     for(auto& replica_id : ids)
     {
@@ -242,6 +240,7 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, two
     message.set_id(my_id);
     message.set_seq(this_seq);
     helper::pb::send(replica_fd, message);
+    log_message_sent();
   }
 
   gossiper(my_id, seq, crdt, seq_to_delta, id_to_ack, socket_server, mtx, gossip_sleep_time, fanout);
@@ -371,6 +370,14 @@ time_t now()
   time_t timer;
   time(&timer);
   return timer;
+}
+
+void log_message_sent()
+{
+  if(REPL) return;
+  l();
+  cout << now() << "|L|" << endl;
+  ul();
 }
 
 void log_bytes_received(proto::message& message)
