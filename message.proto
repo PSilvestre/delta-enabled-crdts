@@ -3,9 +3,13 @@ package proto;
 message message {
   enum message_type {
     ACK = 0;
-    GSET = 1;
-    TWOPSET = 2;
-    GCOUNTER = 3;
+    ID = 1;
+    NEWS = 2;
+    PULL = 3;
+
+    GSET = 10;
+    TWOPSET = 11;
+    GCOUNTER = 12;
   }
 
   required message_type type = 1;

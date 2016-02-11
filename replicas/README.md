@@ -83,3 +83,5 @@ Eventually you'll see this on the __first__ replica:
 2PSet: S( ) T ( a b )
 ```
 
+
+# Push-News-Pull Replicas
