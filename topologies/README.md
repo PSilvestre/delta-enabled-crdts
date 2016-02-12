@@ -48,10 +48,10 @@ The above generates some files:
 
 __Usage:__
 ```bash
-$ ./generate-replicas-commands.sh REPLICAS_CONFIG TOPOLOGY_CONFIG REPLICAS_COMMANDS_DIR [EXECUTIONS_NUMBER]
+$ ./generate-replicas-commands.sh REPLICAS_CONFIG TOPOLOGY_CONFIG REPLICAS_COMMANDS_DIR [ROUNDS_OF_UPDATES]
 ```
 
-The argument __EXECUTIONS_NUMBER__ is optional, and by default is 1. If bigger than 1, between each round of updates, the replicas will wait 120 seconds.
+The argument __ROUNDS_OF_UPDATES__ is optional, and by default is 1. If bigger than 1, between each round of updates, the replicas will wait 120 seconds.
 
 __Example:__
 
