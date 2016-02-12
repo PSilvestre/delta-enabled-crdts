@@ -36,8 +36,8 @@ If "0 1" is on one of the lines, then, in that topology, replica 0 will be conne
 ### Generate replicas commands
 
 ```bash
-$ chmod u+x process_topology_config.sh
-$ ./process_topology_config.sh replicas.cfg config/ring.cfg cmd/ 5
+$ chmod u+x generate-replicas-commands.sh
+$ ./generate-replicas-commands.sh replicas.cfg config/ring.cfg cmd/ 5
 ```
 
 The above generates some files:
@@ -48,10 +48,10 @@ The above generates some files:
 
 __Usage:__
 ```bash
-$ ./process_topology_config.sh REPLICAS_CONFIG TOPOLOGY_CONFIG REPLICAS_COMMANDS_DIR [EXECUTIONS_NUMBER]
+$ ./generate-replicas-commands.sh REPLICAS_CONFIG TOPOLOGY_CONFIG REPLICAS_COMMANDS_DIR [EXECUTIONS_NUMBER]
 ```
 
-The argument __EXECUTIONS_NUMBER__ is optional, and by default is 1. If bigger than 1, after between each round of updates, the replicas will wait 120 seconds.
+The argument __EXECUTIONS_NUMBER__ is optional, and by default is 1. If bigger than 1, between each round of updates, the replicas will wait 120 seconds.
 
 __Example:__
 
