@@ -21,9 +21,12 @@ elements = Set()
 replica_to_state = {}
 replica_to_load = {}
 time_to_bytes = {}
+times_with_adds = Set()
 
 for log in logs_files:
-  replica_id = log.split(".")[0]
+  replica_id_and_execution_number = log.split(".")[0]
+  replica_id = replica_id_and_execution_number.split("_")[0]
+  execution_number = replica_id_and_execution_number.split("_")[1]
   last_state = ""
   load = 0
 
@@ -52,6 +55,8 @@ for log in logs_files:
         if op_parts[0] == "add":
           for i in range(1,len(op_parts)):
             elements.add(op_parts[i])
+
+          times_with_adds.add(time)
 
       elif which == "S":
         # save last state and the time of that last state for all replicas
@@ -92,8 +97,6 @@ time_zero = int(min(time_to_bytes.keys()))
 time_to_delta_bytes = {}
 time_to_ack_bytes = {}
 time_to_id_bytes = {}
-time_to_pull_bytes = {}
-time_to_news_bytes = {}
 
 for replica_id in replicas:
   if not replica_id in replica_to_state:
@@ -110,13 +113,18 @@ for replica_id in replicas:
 
 convergence_time -= time_zero
 
+# Substract time-zero to all times_with_adds
+times_with_adds_ = Set()
+for time in times_with_adds:
+  times_with_adds_.add(int(time) - time_zero)
+
+times_with_adds = times_with_adds_
+
 for key, value in time_to_bytes.iteritems():
   time = int(key) - time_zero
   delta_bytes = 0
   ack_bytes = 0
   id_bytes = 0
-  pull_bytes = 0
-  news_bytes = 0
 
   for (type, bytes) in value:
     if type == 'D':
@@ -125,75 +133,62 @@ for key, value in time_to_bytes.iteritems():
       ack_bytes += int(bytes)
     elif type == 'I':
       id_bytes += int(bytes)
-    elif type == 'P':
-      pull_bytes += int(bytes)
-    elif type == 'N':
-      news_bytes += int(bytes)
     else:
       print "unknown bytes type: " + type
 
   time_to_delta_bytes[time] = delta_bytes
   time_to_ack_bytes[time] = ack_bytes
   time_to_id_bytes[time] = id_bytes
-  time_to_pull_bytes[time] = pull_bytes
-  time_to_news_bytes[time] = news_bytes
 
 times = sorted(time_to_delta_bytes)
 
 delta_bytes_list = []
 ack_bytes_list = []
 id_bytes_list = []
-pull_bytes_list = []
-news_bytes_list = []
 convergence_list = []
+updates_list = []
 
 delta_bytes_sum = 0
 ack_bytes_sum = 0
 id_bytes_sum = 0
-pull_bytes_sum = 0
-news_bytes_sum = 0
-
 
 for time in times:
-  delta_bytes = time_to_delta_bytes[time]
-  ack_bytes = time_to_ack_bytes[time]
-  id_bytes = time_to_id_bytes[time]
-  pull_bytes = time_to_pull_bytes[time]
-  news_bytes = time_to_news_bytes[time]
-  
-  delta_bytes_sum += delta_bytes
-  ack_bytes_sum += ack_bytes
-  id_bytes_sum += id_bytes
-  pull_bytes_sum += pull_bytes
-  news_bytes_sum += news_bytes
+  delta_bytes_sum += time_to_delta_bytes[time]
+  ack_bytes_sum += time_to_ack_bytes[time]
+  id_bytes_sum += time_to_id_bytes[time]
 
   delta_bytes_list.append(delta_bytes_sum)
   ack_bytes_list.append(ack_bytes_sum)
   id_bytes_list.append(id_bytes_sum)
-  pull_bytes_list.append(pull_bytes_sum)
-  news_bytes_list.append(news_bytes_sum)
 
   if time == convergence_time:
     convergence_list.append({"value": 0, "node": {"r" : 8}})
   else:
     convergence_list.append(None)
 
-title = "PNP"
+  if time in times_with_adds:
+    updates_list.append({"value": 0, "node": {"r" : 6}})
+  else:
+    updates_list.append(None)
+
+
+
+title = "Hyperview"
 subtitle = "(with deltas)"
 #subtitle = "(without deltas)"
 title_and_subtitle = title + " " + subtitle
 
 filename = title.replace(" ", "_") + subtitle.replace("(", "_").replace(")", "_").replace(" ", "_") # replace this with a regex
 
-chart = pygal.Line(range=(0, 9000))
+chart = pygal.Line(x_label_rotation=90)
+#chart = pygal.Line(range=(0, 9000))
 chart.x_labels = times
 chart.title = title_and_subtitle
-chart.add("Push",  delta_bytes_list)
+chart.add("State",  delta_bytes_list)
 chart.add("Acks", ack_bytes_list)
-chart.add("IDs", id_bytes_list)
-chart.add("News", news_bytes_list)
-chart.add("Pull", pull_bytes_list) 
+#chart.add("IDs", id_bytes_list)
 chart.add("Convergence", convergence_list)
+chart.add("Update", updates_list)
 chart.render_to_png(filename + ".png")
 chart.render_in_browser()
 

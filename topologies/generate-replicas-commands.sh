@@ -5,7 +5,7 @@ from os import system
 from sets import Set
 from random import randint
 
-wait_time_between_updates = 120
+wait_time_between_updates = 180
 max_update_number = 100000
 
 def random_update():

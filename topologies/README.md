@@ -66,19 +66,25 @@ Make sure you run `make replicas` in the root of the repository before the follo
 
 ```bash
 $ chmod u+x start-replicas.sh
-$ ./start-replicas.sh replicas.cfg cmd/ log/ 0 | bash && tail -f log/*
+$ ./start-replicas.sh replicas.cfg cmd/ log/ 0 5 1 -d | bash && tail -f log/*
 ```
 
 The above starts all replicas that have commands to be executed in __REPLICAS_COMMANDS_DIR__.
 
 __Usage:__
 ```bash
-$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR EXECUTION_NUMBER [GOSSIP_SLEEP_TIME]
+$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR EXECUTION_NUMBER GOSSIP_SLEEP_TIME FANOUT DELTA_FLAG
 ```
 
 The argument __EXECUTION_NUMBER__ can be used to run an experiment several times. Then, the script __analyse.sh__, if it founds more than one execution, it will calculate the average of all executions.
 
-The argument __GOSSIP_SLEEP_TIME__ is optional and by default is __10__ seconds.
+The argument __GOSSIP_SLEEP_TIME__ indicates the number of seconds to wait before gossiping.
+
+The argument __FANOUT__ indicates the fanout to be used by replicas. If __-1__ is passed, __flooding__ will be used.
+
+__DELTA_FLAG__ can have two values:
+- __-d__ and replicas will exchange deltas
+- __-s__ and replicas will exchange its full state
 
 ### Stop replicas
 
