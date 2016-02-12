@@ -66,15 +66,19 @@ Make sure you run `make replicas` in the root of the repository before the follo
 
 ```bash
 $ chmod u+x start-replicas.sh
-$ ./start-replicas.sh replicas.cfg cmd/ log/ | bash && tail -f log/*
+$ ./start-replicas.sh replicas.cfg cmd/ log/ 0 | bash && tail -f log/*
 ```
 
 The above starts all replicas that have commands to be executed in __REPLICAS_COMMANDS_DIR__.
 
 __Usage:__
 ```bash
-$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR
+$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR EXECUTION_NUMBER [GOSSIP_SLEEP_TIME]
 ```
+
+The argument __EXECUTION_NUMBER__ can be used to run an experiment several times. Then, the script __analyse.sh__, if it founds more than one execution, it will calculate the average of all executions.
+
+The argument __GOSSIP_SLEEP_TIME__ is optional and by default is __10__ seconds.
 
 ### Stop replicas
 

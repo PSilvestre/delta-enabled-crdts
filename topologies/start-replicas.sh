@@ -7,15 +7,16 @@ from os import listdir
 from os.path import isfile, join
 
 if (len(sys.argv) < 4):
-  print "Usage: " + sys.argv[0] + " REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR [GOSSIP_SLEEP_TIME]"
+  print "Usage: " + sys.argv[0] + " REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR EXECUTION_NUMBER [GOSSIP_SLEEP_TIME]"
   sys.exit()
 
 gossip_sleep_time = 10
 replicas_config = sys.argv[1]
 replicas_commands_dir = sys.argv[2]
 logs_dir = sys.argv[3]
-if(len(sys.argv) > 4):
-  gossip_sleep_time = sys.argv[4]
+execution_number = sys.argv[4]
+if(len(sys.argv) > 5):
+  gossip_sleep_time = sys.argv[5]
 
 config = {}
 commands_files = [f for f in listdir(replicas_commands_dir) if isfile(join(replicas_commands_dir, f))]
@@ -26,7 +27,7 @@ with open(replicas_config, "r") as file:
     config[id] = [host, port]
 
 print "rm .PIDS"
-print "rm log/*.log"
+print "rm " + logs_dir + "*.log"
 
 for commands in commands_files:
   replica_id = commands.split(".")[0]
@@ -36,10 +37,10 @@ for commands in commands_files:
 
   cmd = "./../replica"
   info = replica_id + ":" + replica_port
-  output = logs_dir + replica_id + ".log"
+  output = logs_dir + replica_id + "_" + execution_number + ".log"
   input = replicas_commands_dir + commands
 
-  start_command = "{cmd} {info} -t {gossip_sleep_time} -f -s 2>&1 > {output} < {input} &".format(cmd = cmd, info = info, gossip_sleep_time = gossip_sleep_time, output = output, input = input)
+  start_command = "{cmd} {info} -t {gossip_sleep_time} 2>&1 > {output} < {input} &".format(cmd = cmd, info = info, gossip_sleep_time = gossip_sleep_time, output = output, input = input)
   print start_command
   print "echo $! >> .PIDS"
 
