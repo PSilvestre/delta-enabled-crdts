@@ -13,14 +13,14 @@ After that, you can:
 
 ```bash
 $ chmod u+x networkx.sh
-$ ./networkx.sh config/
+$ ./networkx.sh topology_config/
 ```
 
 The above generates two files:
-- __config/ring.cfg__
-- __config/erdos_renyi.cfg__
+- __topology_config/ring.cfg__
+- __topology_config/erdos_renyi.cfg__
 
-In __config/__ folder there's another configuration: __hyperview3.cfg__. But this one was not generated using __networkx__ (we used [this](http://blog.ayende.com.s3.amazonaws.com/HyParView/hyparview.html)).
+In __topology_config/__ folder there's another configuration: __hyperview3.cfg__. But this one was not generated using __networkx__ (we used [this](http://blog.ayende.com.s3.amazonaws.com/HyParView/hyparview.html)).
 
 __Usage:__
 ```bash
@@ -38,7 +38,7 @@ If "0 1" is on one of the lines, then, in that topology, replica 0 will be conne
 
 ```bash
 $ chmod u+x generate-replicas-commands.sh
-$ ./generate-replicas-commands.sh replicas.cfg config/ring.cfg cmd/ 5
+$ ./generate-replicas-commands.sh replicas.cfg topology_config/ring.cfg cmd/ 5
 ```
 
 The above generates some files:
@@ -56,9 +56,9 @@ The argument __ROUNDS_OF_UPDATES__ is optional, and by default is 1. If bigger t
 
 __Example:__
 
-If "0 1" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has the line "1 localhost 3001", then the file __cmd/0.cmds__ will have the line "connect 1:localhost:3001".
+If "0 1" is on one of the lines of __topology_config/ring.cfg__, and __replicas.cfg__ has the line "1 localhost 3001", then the file __cmd/0.cmds__ will have the line "connect 1:localhost:3001".
 
-If "1 2" is on one of the lines of __config/ring.cfg__, and __replicas.cfg__ has the line "2 localhost 3002", then the file __cmd/1.cmds__ will have the line "connect 2:localhost:3002".
+If "1 2" is on one of the lines of __topology_config/ring.cfg__, and __replicas.cfg__ has the line "2 localhost 3002", then the file __cmd/1.cmds__ will have the line "connect 2:localhost:3002".
 
 
 ### Start replicas
