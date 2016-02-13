@@ -105,20 +105,41 @@ def subtract_time_zero(times, time_zero):
 
   return new_times
 
-# get all times and the time_zero
+# get all_times and time_zero
 all_times = Set()
 all_times.update(time_to_replica_and_state.keys())
 all_times.update(time_to_bytes.keys())
 all_times.update(time_with_adds)
-
 time_zero = int(min(all_times))
-all_times = subtract_time_zero(all_times, time_zero)
-all_times = sorted(all_times)
 
 # process time_to_replica_and_state
 time_with_convergence = Set()
-#for key, value in time_to_replica_and_state.iteritems():
+replica_to_last_state = {}
 
+for time in sorted(all_times):
+  if time in time_to_replica_and_state:
+    for replica_and_state in time_to_replica_and_state[time]:
+      (replica, state) = replica_and_state
+      replica_to_last_state[replica] = state
+
+  states = replica_to_last_state.values()
+  number_of_states = len(states)
+  converged = True
+  
+  if number_of_states == len(replicas):
+    for i in range(number_of_states):
+      converged = converged and states[0] == states[i]
+  else:
+    converged = False
+
+  if converged:
+    print states
+    convergence_time = int(time) - time_zero
+    time_with_convergence.add(convergence_time)
+
+
+all_times = subtract_time_zero(all_times, time_zero)
+all_times = sorted(all_times)
 
 # process time_to_bytes
 time_to_delta_bytes = {}

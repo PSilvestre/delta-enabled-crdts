@@ -115,7 +115,7 @@ __Usage:__
 $ ./analyse.sh LOGS_DIR EXECUTION_NUMBER
 ```
 
-We analyse only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument.
+We only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument.
 
 
 
