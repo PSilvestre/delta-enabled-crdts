@@ -117,5 +117,5 @@ $ ./analyse.sh LOGS_DIR EXECUTION_NUMBER OUTPUT_FILE_NAME
 
 We only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument.
 
-After generating the charts, in __OUTPUT_FILE_NAME__ will as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
+After generating the charts, we'll store in __OUTPUT_FILE_NAME__ as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
 
