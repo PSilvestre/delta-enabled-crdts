@@ -107,15 +107,15 @@ After that, you can:
 
 ```bash
 $ chmod u+x analyse.sh
-$ ./analyse.sh log/ 0
+$ ./analyse.sh log/ 0 log_0.json
 ```
 
 __Usage:__
 ```bash
-$ ./analyse.sh LOGS_DIR EXECUTION_NUMBER
+$ ./analyse.sh LOGS_DIR EXECUTION_NUMBER OUTPUT_FILE_NAME
 ```
 
 We only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument.
 
-
+After generating the charts, in __OUTPUT_FILE_NAME__ will as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
 

@@ -8,13 +8,15 @@ import pygal
 from os import listdir
 from os.path import isfile, join
 from sets import Set
+import json
 
-if len(sys.argv) < 3:
-  print "Usage: " + sys.argv[0] + " LOGS_DIR EXECUTION_NUMBER"
+if len(sys.argv) < 4:
+  print "Usage: " + sys.argv[0] + " LOGS_DIR EXECUTION_NUMBER OUTPUT_FILE_NAME"
   sys.exit()
 
 logs_dir = sys.argv[1]
 execution_number = sys.argv[2]
+output_file_name = sys.argv[3]
 logs_files = [f for f in listdir(logs_dir) if isfile(join(logs_dir, f))]
 
 replicas = Set()
@@ -284,3 +286,18 @@ for (label, count) in min_range_list:
 l_chart.y_labels = range(0, max(counts) + 2)
 l_chart.render_to_png(filename + "load.png")
 l_chart.render_in_browser()
+
+
+# save all values to a file
+output = {}
+output['times'] = all_times
+output['deltas'] = delta_bytes_list
+output['acks'] = ack_bytes_list
+output['ids'] = id_bytes_list
+output['convergence'] = convergence_list
+output['updates'] = updates_list
+output['load'] = replica_to_load.values()
+
+with open(output_file_name, 'w') as output_file:
+  json.dump(output, output_file)
+ 
