@@ -25,8 +25,7 @@ with open(replicas_config, "r") as file:
     id,host,port = (i.rstrip("\n") for i in line.split(" "))
     config[id] = [host, port]
 
-print "rm .PIDS"
-print "rm " + logs_dir + "*.log"
+print "rm -f " + logs_dir + "*.log"
 
 for commands in commands_files:
   replica_id = commands.split(".")[0]
