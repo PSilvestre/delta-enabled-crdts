@@ -133,7 +133,6 @@ for time in sorted(all_times):
     converged = False
 
   if converged:
-    print states
     convergence_time = int(time) - time_zero
     time_with_convergence.add(convergence_time)
 
@@ -214,7 +213,7 @@ for time in all_times:
     updates_list.append(None)
 
 
-# draw the chart now
+# draw the bytes chart now
 title = "Hyperview"
 subtitle = "(with deltas)"
 #subtitle = "(without deltas)"
@@ -234,9 +233,54 @@ chart.add("Update", updates_list)
 chart.render_to_png(filename + ".png")
 chart.render_in_browser()
 
-l_chart = pygal.HorizontalBar()
+
+# process replica_to_load
+
+# function that, given the load of a replica, returns the min of the range where it fits.
+# It assums the "mins" list is ordered
+def which_range(mins, load):
+  for min in mins[::-1]:
+    if load >= min:
+      return min
+
+
+load = replica_to_load.values()
+min_load = min(load)
+max_load = max(load)
+
+mins = []
+while (min_load < max_load):
+  mins.append(min_load)
+  min_load += 3
+
+min_range_to_count = {}
+
+for replica, load in replica_to_load.iteritems():
+  min_range = which_range(mins, load)
+
+  if min_range in min_range_to_count:
+    min_range_to_count[min_range] += 1
+  else:
+    min_range_to_count[min_range] = 1
+
+min_range_list = []
+counts = Set()
+
+for min in mins:
+  label = str(min) + " - " + str(min + 2) + " msgs"
+  count = 0
+  if min in min_range_to_count:
+    count = min_range_to_count[min]
+
+  min_range_list.append((label, count))
+  counts.add(count)
+
+
+# draw load chart now
+l_chart = pygal.Bar()
 l_chart.title = "Load distribution - " + title_and_subtitle
-for key, value in replica_to_load.iteritems():
-  l_chart.add("replica " + str(key), value)
+for (label, count) in min_range_list:
+  l_chart.add(label, count)
+l_chart.y_labels = range(0, max(counts) + 2)
 l_chart.render_to_png(filename + "load.png")
 l_chart.render_in_browser()
