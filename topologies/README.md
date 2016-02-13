@@ -67,17 +67,15 @@ Make sure you run `make replicas` in the root of the repository before the follo
 
 ```bash
 $ chmod u+x start-replicas.sh
-$ ./start-replicas.sh replicas.cfg cmd/ log/ 0 5 1 -d | bash && tail -f log/*
+$ ./start-replicas.sh replicas.cfg cmd/ log/ 5 1 -d | bash && tail -f log/*
 ```
 
 The above starts all replicas that have commands to be executed in __REPLICAS_COMMANDS_DIR__.
 
 __Usage:__
 ```bash
-$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR EXECUTION_NUMBER GOSSIP_SLEEP_TIME FANOUT DELTA_FLAG
+$ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR GOSSIP_SLEEP_TIME FANOUT DELTA_FLAG
 ```
-
-The argument __EXECUTION_NUMBER__ can be used to run an experiment several times. The script __analyse.sh__, only processes one execution at a time, but it saves the info used to draw the charts in a file. After that, you can use __average.sh__ with files resultant from analysing different executions.
 
 The argument __GOSSIP_SLEEP_TIME__ indicates the number of seconds to wait before gossiping.
 
@@ -108,15 +106,13 @@ After that, you can:
 
 ```bash
 $ chmod u+x analyse.sh
-$ ./analyse.sh log/ 0 log_0.json
+$ ./analyse.sh log/ log.json
 ```
 
 __Usage:__
 ```bash
-$ ./analyse.sh LOGS_DIR EXECUTION_NUMBER OUTPUT_FILE_NAME
+$ ./analyse.sh LOGS_DIR OUTPUT_FILE_NAME
 ```
-
-We only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument. Logs from other executions are ignored.
 
 After generating the charts, we'll store in __OUTPUT_FILE_NAME__ as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
 

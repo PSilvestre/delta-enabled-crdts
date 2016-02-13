@@ -10,13 +10,12 @@ from os.path import isfile, join
 from sets import Set
 import json
 
-if len(sys.argv) < 4:
-  print "Usage: " + sys.argv[0] + " LOGS_DIR EXECUTION_NUMBER OUTPUT_FILE_NAME"
+if len(sys.argv) < 3:
+  print "Usage: " + sys.argv[0] + " LOGS_DIR OUTPUT_FILE_NAME"
   sys.exit()
 
 logs_dir = sys.argv[1]
-execution_number = sys.argv[2]
-output_file_name = sys.argv[3]
+output_file_name = sys.argv[2]
 logs_files = [f for f in listdir(logs_dir) if isfile(join(logs_dir, f))]
 
 replicas = Set()
@@ -26,14 +25,12 @@ time_to_bytes = {}
 time_with_adds = Set()
 
 for log in logs_files:
-  replica_id_and_execution_number = log.split(".")[0]
-  replica_id = replica_id_and_execution_number.split("_")[0]
-  log_execution_number = replica_id_and_execution_number.split("_")[1]
+  replica_id = log.split(".")[0]
   last_state = ""
   load = 0
 
-  # ignore invalid files and logs from other executions
-  if replica_id == "" or log_execution_number != execution_number:
+  # ignore invalid files
+  if replica_id == "":
     continue
 
   replicas.add(replica_id)
