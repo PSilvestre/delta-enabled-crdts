@@ -224,10 +224,15 @@ labels['f'] = "Flooding"
 labels['d'] = "With Deltas"
 labels['s'] = "Without Deltas"
 
-code_name = logs_dir.split("/")[1]
-code_name_parts = code_name.split("_")
+logs_dir_parts = logs_dir.split("/")
+if len(logs_dir_parts) > 2:
+  code_name = logs_dir_parts[1]
+  code_name_parts = code_name.split("_")
 
-title = labels[code_name_parts[0]] + " (" + labels[code_name_parts[2]] + ") - " + labels[code_name_parts[1]]
+  title = labels[code_name_parts[0]] + " (" + labels[code_name_parts[2]] + ") - " + labels[code_name_parts[1]]
+else:
+  code_name = "undefined"
+  title = "Undefined"
 
 chart = pygal.Line(x_label_rotation=90)
 #chart = pygal.Line(range=(0, 9000))
