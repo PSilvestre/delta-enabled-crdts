@@ -9,28 +9,29 @@ from os import listdir
 from os.path import isfile, join
 from sets import Set
 
-if(len(sys.argv) < 2):
-  print "Usage: " + sys.argv[0] + " LOGS_DIR"
+if len(sys.argv) < 3:
+  print "Usage: " + sys.argv[0] + " LOGS_DIR EXECUTION_NUMBER"
   sys.exit()
 
 logs_dir = sys.argv[1]
+execution_number = sys.argv[2]
 logs_files = [f for f in listdir(logs_dir) if isfile(join(logs_dir, f))]
 
 replicas = Set()
-elements = Set()
-replica_to_state = {}
 replica_to_load = {}
+time_to_replica_and_state = {}
 time_to_bytes = {}
-times_with_adds = Set()
+time_with_adds = Set()
 
 for log in logs_files:
   replica_id_and_execution_number = log.split(".")[0]
   replica_id = replica_id_and_execution_number.split("_")[0]
-  execution_number = replica_id_and_execution_number.split("_")[1]
+  log_execution_number = replica_id_and_execution_number.split("_")[1]
   last_state = ""
   load = 0
 
-  if replica_id == "":
+  # ignore invalid files and logs from other executions
+  if replica_id == "" or log_execution_number != execution_number:
     continue
 
   replicas.add(replica_id)
@@ -48,77 +49,81 @@ for log in logs_files:
       which = parts[1]
 
       if which == "O":
-        # save all elements added
-        # TODO support rmv
-        op = parts[2]
-        op_parts = op.split(" ")
+        # save times with rounds of updates
+        op_parts = parts[2].split(" ")
         if op_parts[0] == "add":
-          for i in range(1,len(op_parts)):
-            elements.add(op_parts[i])
-
-          times_with_adds.add(time)
+          time_with_adds.add(time)
 
       elif which == "S":
-        # save last state and the time of that last state for all replicas
-        last_state_time = time
-        last_state = parts[2]
+        # save the replica and state for all times to detect convergence
+        state_log = parts[2]
+        state_log_parts = state_log.split(",")
+        state = Set()
+
+        for part in state_log_parts:
+          if part != "":
+            state.add(part)
+
+        replica_and_state = (replica_id, state)
+
+        if time in time_to_replica_and_state:
+          time_to_replica_and_state[time].append(replica_and_state)
+        else:
+          time_to_replica_and_state[time] = [replica_and_state]
 
       elif which == "B":
         # save bytes transfered 
         ack_or_delta = parts[2]
         bytes = parts[6]
+        aod_and_bytes = (ack_or_delta, bytes)
 
         if time in time_to_bytes:
-          time_to_bytes[time].append((ack_or_delta, bytes))
+          time_to_bytes[time].append(aod_and_bytes)
         else:
-          time_to_bytes[time] = [(ack_or_delta, bytes)]
+          time_to_bytes[time] = [aod_and_bytes]
+
       elif which == "L":
         # load distribution
         load += 1
+
       else:
         print "unknown log type"
 
-    last_state_parts = last_state.split(",")
-    state = Set()
-    for part in last_state_parts:
-      if part != "":
-        state.add(part)
-    replica_to_state[replica_id] = (last_state_time, state)
     replica_to_load[int(replica_id)] = load
 
 
-def convergence_failed(): 
-  print "convergence failed"
-  sys.exit()
+# process the info from the logs:
 
-# draw the chart now
-convergence_time = 0
-time_zero = int(min(time_to_bytes.keys()))
+# function that, given a collection on timestamps and the time zero,
+# returns a set of times truncated to time_zero
+def subtract_time_zero(times, time_zero):
+  new_times = Set()
+
+  for time in times:
+    new_time = int(time) - time_zero
+    new_times.add(new_time)
+
+  return new_times
+
+# get all times and the time_zero
+all_times = Set()
+all_times.update(time_to_replica_and_state.keys())
+all_times.update(time_to_bytes.keys())
+all_times.update(time_with_adds)
+
+time_zero = int(min(all_times))
+all_times = subtract_time_zero(all_times, time_zero)
+all_times = sorted(all_times)
+
+# process time_to_replica_and_state
+time_with_convergence = Set()
+#for key, value in time_to_replica_and_state.iteritems():
+
+
+# process time_to_bytes
 time_to_delta_bytes = {}
 time_to_ack_bytes = {}
 time_to_id_bytes = {}
-
-for replica_id in replicas:
-  if not replica_id in replica_to_state:
-    convergence_failed()
-  
-  (time, state) = replica_to_state[replica_id]
-  time = int(time)
-  
-  if state != elements:
-    convergence_failed()
-
-  if time > convergence_time:
-    convergence_time = time
-
-convergence_time -= time_zero
-
-# Substract time-zero to all times_with_adds
-times_with_adds_ = Set()
-for time in times_with_adds:
-  times_with_adds_.add(int(time) - time_zero)
-
-times_with_adds = times_with_adds_
 
 for key, value in time_to_bytes.iteritems():
   time = int(key) - time_zero
@@ -140,8 +145,11 @@ for key, value in time_to_bytes.iteritems():
   time_to_ack_bytes[time] = ack_bytes
   time_to_id_bytes[time] = id_bytes
 
-times = sorted(time_to_delta_bytes)
 
+# process time_with_adds
+time_with_adds = subtract_time_zero(time_with_adds, time_zero)
+
+# Compile all info in lists
 delta_bytes_list = []
 ack_bytes_list = []
 id_bytes_list = []
@@ -152,27 +160,40 @@ delta_bytes_sum = 0
 ack_bytes_sum = 0
 id_bytes_sum = 0
 
-for time in times:
-  delta_bytes_sum += time_to_delta_bytes[time]
-  ack_bytes_sum += time_to_ack_bytes[time]
-  id_bytes_sum += time_to_id_bytes[time]
+for time in all_times:
+  delta_bytes = 0
+  ack_bytes = 0
+  id_bytes = 0
+
+  if time in time_to_delta_bytes:
+    delta_bytes = time_to_delta_bytes[time]
+
+  if time in time_to_ack_bytes:
+    ack_bytes = time_to_ack_bytes[time]
+
+  if time in time_to_id_bytes:
+    id_bytes = time_to_id_bytes[time]
+
+  delta_bytes_sum += delta_bytes
+  ack_bytes_sum += ack_bytes
+  id_bytes_sum += id_bytes
 
   delta_bytes_list.append(delta_bytes_sum)
   ack_bytes_list.append(ack_bytes_sum)
   id_bytes_list.append(id_bytes_sum)
 
-  if time == convergence_time:
+  if time in time_with_convergence:
     convergence_list.append({"value": 0, "node": {"r" : 8}})
   else:
     convergence_list.append(None)
 
-  if time in times_with_adds:
+  if time in time_with_adds:
     updates_list.append({"value": 0, "node": {"r" : 6}})
   else:
     updates_list.append(None)
 
 
-
+# draw the chart now
 title = "Hyperview"
 subtitle = "(with deltas)"
 #subtitle = "(without deltas)"
@@ -182,7 +203,7 @@ filename = title.replace(" ", "_") + subtitle.replace("(", "_").replace(")", "_"
 
 chart = pygal.Line(x_label_rotation=90)
 #chart = pygal.Line(range=(0, 9000))
-chart.x_labels = times
+chart.x_labels = all_times
 chart.title = title_and_subtitle
 chart.add("State",  delta_bytes_list)
 chart.add("Acks", ack_bytes_list)

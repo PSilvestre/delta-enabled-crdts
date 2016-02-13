@@ -107,13 +107,15 @@ After that, you can:
 
 ```bash
 $ chmod u+x analyse.sh
-$ ./analyse.sh log/
+$ ./analyse.sh log/ 0
 ```
 
 __Usage:__
 ```bash
-$ ./analyse.sh LOGS_DIR
+$ ./analyse.sh LOGS_DIR EXECUTION_NUMBER
 ```
+
+We analyse only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument.
 
 
 
