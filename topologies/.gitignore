@@ -1,3 +1,6 @@
 cmd/*
 replicas_config/*.cfg
 log/*
+analysis/*.json
+analysis/*.png
+analyse-all.sh

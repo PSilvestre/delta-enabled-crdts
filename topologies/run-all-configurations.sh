@@ -3,6 +3,8 @@
 import sys
 from os import system
 
+system("rm -f analyse-all.sh")
+
 executions_per_config = 3
 gossip_sleep_time = 5
 rounds_of_updates = 3
@@ -10,6 +12,7 @@ rounds_of_updates = 3
 log_dir = "log/"
 cmd_dir = "cmd/"
 replicas_config_dir = "replicas_config/"
+analysis_dir = "analysis/"
 
 
 # erdos-renyi
@@ -62,9 +65,14 @@ for execution in range(executions_per_config):
         print start_command
 
         current_execution += 1
+
+        print "echo \"./analyse.sh " + log + " " + analysis_dir + "\" >> analyse-all.sh"
   
   print "sleep 9m"      
   print "./stop-replicas.sh"
 
-
+print "chmod u+x analyse-all.sh"
 print "echo \"I'm done!\""
+
+
+

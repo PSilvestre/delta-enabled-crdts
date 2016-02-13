@@ -106,15 +106,15 @@ After that, you can:
 
 ```bash
 $ chmod u+x analyse.sh
-$ ./analyse.sh log/ log.json
+$ ./analyse.sh log/ analysis/
 ```
 
 __Usage:__
 ```bash
-$ ./analyse.sh LOGS_DIR OUTPUT_FILE_NAME
+$ ./analyse.sh LOGS_DIR ANALYSIS_DIR
 ```
 
-After generating the charts, we'll store in __OUTPUT_FILE_NAME__ as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
+After generating the charts, we'll store in a __JSON__ file the values needed to draw the charts again with no need to analyse the logs again. These values, also allows us to calculate the average of several executions.
 
 # Several executions
 
@@ -136,6 +136,12 @@ $ ./generate-replicas-config.sh REPLICAS_CONFIG_DIR EXECUTIONS_NUMBER
 
 ```bash
 $ chmod u+x run-all-configurations.sh
-$ ./run-all-configurations.sh
+$ ./run-all-configurations.sh | bash
+```
+
+This also creates a file __analyse-all.sh__ which you can run in the end it will generate the charts for all executions.
+
+```bash
+$ ./analyse-all.sh
 ```
 

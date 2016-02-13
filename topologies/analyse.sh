@@ -11,11 +11,11 @@ from sets import Set
 import json
 
 if len(sys.argv) < 3:
-  print "Usage: " + sys.argv[0] + " LOGS_DIR OUTPUT_FILE_NAME"
+  print "Usage: " + sys.argv[0] + " LOGS_DIR ANALYSIS_DIR"
   sys.exit()
 
 logs_dir = sys.argv[1]
-output_file_name = sys.argv[2]
+analysis_dir = sys.argv[2]
 logs_files = [f for f in listdir(logs_dir) if isfile(join(logs_dir, f))]
 
 replicas = Set()
@@ -213,24 +213,33 @@ for time in all_times:
 
 
 # draw the bytes chart now
-title = "Hyperview"
-subtitle = "(with deltas)"
-#subtitle = "(without deltas)"
-title_and_subtitle = title + " " + subtitle
+labels = {}
+labels['e'] = "Erdos-Renyi"
+labels['r'] = "Ring"
+labels['h'] = "HyParView"
+labels['f1'] = "Fanout 1"
+labels['f2'] = "Fanout 2"
+labels['f3'] = "Fanout 3"
+labels['f'] = "Flooding"
+labels['d'] = "With Deltas"
+labels['s'] = "Without Deltas"
 
-filename = title.replace(" ", "_") + subtitle.replace("(", "_").replace(")", "_").replace(" ", "_") # replace this with a regex
+code_name = logs_dir.split("/")[1]
+code_name_parts = code_name.split("_")
+
+title = labels[code_name_parts[0]] + " (" + labels[code_name_parts[2]] + ") - " + labels[code_name_parts[1]]
 
 chart = pygal.Line(x_label_rotation=90)
 #chart = pygal.Line(range=(0, 9000))
 chart.x_labels = all_times
-chart.title = title_and_subtitle
+chart.title = title
 chart.add("State",  delta_bytes_list)
 chart.add("Acks", ack_bytes_list)
 #chart.add("IDs", id_bytes_list)
 chart.add("Convergence", convergence_list)
 chart.add("Update", updates_list)
-chart.render_to_png(filename + ".png")
-chart.render_in_browser()
+chart.render_to_png(analysis_dir + code_name + ".png")
+#chart.render_in_browser()
 
 
 # process replica_to_load
@@ -277,12 +286,12 @@ for min in mins:
 
 # draw load chart now
 l_chart = pygal.Bar()
-l_chart.title = "Load distribution - " + title_and_subtitle
+l_chart.title = "Load distribution: " + title
 for (label, count) in min_range_list:
   l_chart.add(label, count)
 l_chart.y_labels = range(0, max(counts) + 2)
-l_chart.render_to_png(filename + "load.png")
-l_chart.render_in_browser()
+l_chart.render_to_png(analysis_dir + code_name + "_load.png")
+#l_chart.render_in_browser()
 
 
 # save all values to a file
@@ -295,6 +304,6 @@ output['convergence'] = convergence_list
 output['updates'] = updates_list
 output['load'] = replica_to_load.values()
 
-with open(output_file_name, 'w') as output_file:
+with open(analysis_dir + code_name + ".json", 'w') as output_file:
   json.dump(output, output_file)
  
