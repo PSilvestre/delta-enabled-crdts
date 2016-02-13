@@ -16,10 +16,11 @@ $ chmod u+x networkx.sh
 $ ./networkx.sh config/
 ```
 
-The above generates three files:
+The above generates two files:
 - __config/ring.cfg__
-- __config/tree.cfg__
-- __config/graph.cfg__
+- __config/erdos_renyi.cfg__
+
+In __config/__ folder there's another configuration: __hyperview3.cfg__ that cannot be generated using __networkx__.
 
 Each line of these files contains two ids. 
 
@@ -115,7 +116,7 @@ __Usage:__
 $ ./analyse.sh LOGS_DIR EXECUTION_NUMBER OUTPUT_FILE_NAME
 ```
 
-We only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument.
+We only analyse on execution at a time. That's the reason for the __EXECUTION_NUMBER__ argument. Logs from other executions are ignored.
 
 After generating the charts, we'll store in __OUTPUT_FILE_NAME__ as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
 

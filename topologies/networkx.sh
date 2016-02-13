@@ -25,13 +25,6 @@ def random_ring():
   show(ring)
   save("ring.cfg", ring)
 
-def random_tree():
-  forks_on_each_node = 3
-  height = 2
-  tree = nx.balanced_tree(forks_on_each_node, height)
-  show(tree)
-  save("tree.cfg", tree)
-
 def erdos_renyi():
   nodes = 13
   probability_of_edge_creation = 0.3
@@ -47,9 +40,6 @@ topologies_config_dir = sys.argv[1]
 
 print "random ring: "
 random_ring()
-
-print "\nrandom tree: "
-random_tree()
 
 print "\nerdos renyi: "
 erdos_renyi()
