@@ -131,3 +131,11 @@ __Usage:__
 ```bash
 $ ./generate-replicas-config.sh REPLICAS_CONFIG_DIR EXECUTIONS_NUMBER 
 ``` 
+
+### Run all configurations
+
+```bash
+$ chmod u+x run-all-configurations.sh
+$ ./run-all-configurations.sh
+```
+
