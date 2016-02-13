@@ -120,4 +120,18 @@ We only analyse on execution at a time. That's the reason for the __EXECUTION_NU
 
 After generating the charts, we'll store in __OUTPUT_FILE_NAME__ as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
 
-# Average
+# Several executions
+
+### Generate replicas config
+
+You can generate several config files, and use one for each execution. Imagine there will be 540 executions:
+
+```bash
+$ chmod u+x generate-replicas-config.sh
+$ ./generate-replicas-config.sh replicas_config/ 540
+```
+
+__Usage:__
+```bash
+$ ./generate-replicas-config.sh REPLICAS_CONFIG_DIR EXECUTIONS_NUMBER 
+``` 

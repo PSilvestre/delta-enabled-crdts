@@ -1,2 +1,3 @@
 cmd/*.cmds
+replicas_config/*.cfg
 log/*
