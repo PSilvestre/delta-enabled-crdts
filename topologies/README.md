@@ -22,12 +22,12 @@ The above generates two files:
 
 In __config/__ folder there's another configuration: __hyperview3.cfg__. But this one was not generated using __networkx__ (we used [this](http://blog.ayende.com.s3.amazonaws.com/HyParView/hyparview.html)).
 
-Each line of these files contains two ids. 
-
 __Usage:__
 ```bash
 $ ./networkx.sh TOPOLOGIES_CONFIG_DIR
 ```
+
+Each line of these files contains two ids. 
 
 __Example:__
 
@@ -52,7 +52,7 @@ __Usage:__
 $ ./generate-replicas-commands.sh REPLICAS_CONFIG TOPOLOGY_CONFIG REPLICAS_COMMANDS_DIR [ROUNDS_OF_UPDATES]
 ```
 
-The argument __ROUNDS_OF_UPDATES__ is optional, and by default is 1. If bigger than 1, between each round of updates, the replicas will wait 120 seconds.
+The argument __ROUNDS_OF_UPDATES__ is optional, and by default is 1. If bigger than 1, between each round of updates, the replicas will wait 180 seconds.
 
 __Example:__
 
@@ -77,7 +77,7 @@ __Usage:__
 $ ./start-replicas.sh REPLICAS_CONFIG REPLICAS_COMMANDS_DIR LOGS_DIR EXECUTION_NUMBER GOSSIP_SLEEP_TIME FANOUT DELTA_FLAG
 ```
 
-The argument __EXECUTION_NUMBER__ can be used to run an experiment several times. Then, the script __analyse.sh__, if it founds more than one execution, it will calculate the average of all executions.
+The argument __EXECUTION_NUMBER__ can be used to run an experiment several times. The script __analyse.sh__, only processes one execution at a time, but it saves the info used to draw the charts in a file. After that, you can use __average.sh__ with files resultant from analysing different executions.
 
 The argument __GOSSIP_SLEEP_TIME__ indicates the number of seconds to wait before gossiping.
 
@@ -120,3 +120,4 @@ We only analyse on execution at a time. That's the reason for the __EXECUTION_NU
 
 After generating the charts, we'll store in __OUTPUT_FILE_NAME__ as __JSON__ the values needed to draw the charts again without need to analyse the logs again. These values, also allows us to calculate the average of several executions.
 
+# Average
