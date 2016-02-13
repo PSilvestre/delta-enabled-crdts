@@ -20,7 +20,7 @@ The above generates two files:
 - __config/ring.cfg__
 - __config/erdos_renyi.cfg__
 
-In __config/__ folder there's another configuration: __hyperview3.cfg__ that cannot be generated using __networkx__.
+In __config/__ folder there's another configuration: __hyperview3.cfg__. But this one was not generated using __networkx__ (we used [this](http://blog.ayende.com.s3.amazonaws.com/HyParView/hyparview.html)).
 
 Each line of these files contains two ids. 
 
