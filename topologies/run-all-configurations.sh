@@ -5,7 +5,7 @@ from os import system
 
 system("rm -f analyse-all.sh")
 
-executions_per_config = 3
+executions_per_config = 42
 gossip_sleep_time = 5
 rounds_of_updates = 3
 

@@ -114,6 +114,7 @@ time_zero = int(min(all_times))
 # process time_to_replica_and_state
 time_with_convergence = Set()
 replica_to_last_state = {}
+already_converged = False
 
 for time in sorted(all_times):
   if time in time_to_replica_and_state:
@@ -133,7 +134,12 @@ for time in sorted(all_times):
 
   if converged:
     convergence_time = int(time) - time_zero
-    time_with_convergence.add(convergence_time)
+    if not already_converged:
+      time_with_convergence.add(convergence_time)
+
+    already_converged = True
+  else:
+    already_converged = False
 
 
 all_times = subtract_time_zero(all_times, time_zero)
