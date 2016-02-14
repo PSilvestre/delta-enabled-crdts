@@ -145,3 +145,18 @@ This also creates a file __analyse-all.sh__ which you can run in the end it will
 $ ./analyse-all.sh
 ```
 
+### Average
+
+### Make PDF
+
+You can generate a __PDF__ given a folder with the byte-charts and load-charts.
+
+```bash
+$ chmod u+x make-pdf.sh
+$ ./make-pdf.sh analysis/ some_filename
+```
+
+__Usage:__
+```bash
+./make-pdf.sh CHARTS_DIR OUTPUT_FILENAME
+```
