@@ -4,3 +4,4 @@ log/*
 analysis/*.json
 analysis/*.png
 analyse-all.sh
+average/*.png

@@ -146,6 +146,18 @@ $ ./analyse-all.sh
 ```
 
 ### Average
+If you want to do an average of several executions you can:
+
+```bash
+$ chmod u+x average.sh
+$ ./average.sh analysis/ average/
+```
+
+__Usage:__
+```bash
+./average.sh ANALYSIS_DIR AVERAGE_DIR
+```
+
 
 ### Make PDF
 
@@ -153,7 +165,7 @@ You can generate a __PDF__ given a folder with the byte-charts and load-charts.
 
 ```bash
 $ chmod u+x make-pdf.sh
-$ ./make-pdf.sh analysis/ some_filename
+$ ./make-pdf.sh average/ some_filename
 ```
 
 __Usage:__
