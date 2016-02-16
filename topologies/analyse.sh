@@ -10,6 +10,9 @@ from os.path import isfile, join
 from sets import Set
 import json
 
+MAX_Y = 30000
+WIDTH = 1600
+
 if len(sys.argv) < 3:
   print "Usage: " + sys.argv[0] + " LOGS_DIR ANALYSIS_DIR"
   sys.exit()
@@ -240,8 +243,7 @@ else:
   code_name = "undefined"
   title = "Undefined"
 
-chart = pygal.Line(x_label_rotation=90)
-#chart = pygal.Line(range=(0, 9000))
+chart = pygal.Line(x_label_rotation=90, range=(0, MAX_Y), width=WIDTH)
 chart.x_labels = all_times
 chart.title = title
 chart.add("State",  delta_bytes_list)

@@ -41,14 +41,14 @@ def load_or_not(key_zero, key_one, file):
     bytes[key_zero][key_one].append(file)
 
 for file in sorted(charts_files):
-  if re.search("_d_", file):
+  if re.search("_d", file):
     if re.search("^e_", file):
       load_or_not("delta", "e", file)
     elif re.search("^r_", file):
       load_or_not("delta", "r", file)
     elif re.search("^h_", file):
       load_or_not("delta", "h", file)
-  elif re.search("_s_", file):
+  elif re.search("_s", file):
     if re.search("^e_", file):
       load_or_not("state", "e", file)
     elif re.search("^r_", file):
