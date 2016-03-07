@@ -18,6 +18,7 @@
 using namespace std;
 bool REPL = false;
 bool DELTA = true;
+bool OPTIMIZATION = true;
 
 void id_and_port(string& s, int& id, int& port);
 void id_host_and_port(string& s, int& id, string& host, int& port);
@@ -221,8 +222,12 @@ void gossiper(int my_id, int& seq, twopset<string>& crdt, map<int, pair<int, two
         for(int i = last_ack; i < seq; i++)
         {
           // NEW
-          int from = seq_to_delta[i].first;
-          if(from != replica_id) delta.join(seq_to_delta[i].second);
+          if(OPTIMIZATION)
+          {
+            int from = seq_to_delta[i].first;
+            if(from != replica_id) delta.join(seq_to_delta[i].second);
+          }
+          else delta.join(seq_to_delta[i].second);
         }
       }
 
@@ -273,6 +278,7 @@ int main(int argc, char *argv[])
     else if(arg == "-f") fanout = atoi(argv[++i]);
     else if(arg == "-d") DELTA = true;
     else if(arg == "-s") DELTA = false;
+    else if(arg == "-no") OPTIMIZATION = false;
     // TODO deal with bad usage
   }
 
