@@ -102,8 +102,6 @@ def do_average(average_dir, analyse_key, analysis):
   convergences = lol_average(all_convergences)
   convergences = closest_times(all_times, convergences)
 
-  print convergences
-
   # do average of bytes
   deltas_list = []
   values_before = []
@@ -173,8 +171,6 @@ all_times = []
 for i in range(0, MAX_X/5 + 1):
   all_times.append(i * 5)
 
-print all_times
-
 three_graphics = {}
 
 for key, (state_list, convergences) in analysis_results.iteritems():
@@ -192,8 +188,6 @@ with open("charts/reads.json", "w") as output_file:
   json.dump(three_graphics, output_file)
 
 for fanout, fanout_results in three_graphics.iteritems():
-  print fanout
-  print len(fanout_results)
   # draw bytes chart now
   chart = pygal.Line(x_label_rotation=90, range=(0, MAX_Y), width=WIDTH)
   chart.x_labels = all_times
