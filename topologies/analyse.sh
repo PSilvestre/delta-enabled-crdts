@@ -10,8 +10,10 @@ from os.path import isfile, join
 from sets import Set
 import json
 
-MAX_Y = 30000
+MAX_Y = 100000
 WIDTH = 1600
+PNG = False
+JSON = not PNG
 
 if len(sys.argv) < 3:
   print "Usage: " + sys.argv[0] + " LOGS_DIR ANALYSIS_DIR"
@@ -113,6 +115,16 @@ all_times.update(time_to_replica_and_state.keys())
 all_times.update(time_to_bytes.keys())
 all_times.update(time_with_adds)
 time_zero = int(min(all_times))
+max_time = int(max(all_times)) - time_zero
+max_time = ((max_time / 5) + 1 ) * 5 # make sure is multiple of 5
+
+all_times_ = []
+for i in range(0, max_time / 5 + 1):
+  all_times_.append(i * 5)
+
+def closest_time(all_times, time):
+  index = min(range(len(all_times)), key=lambda i: abs(all_times[i] - time))
+  return all_times[index]
 
 # process time_to_replica_and_state
 time_with_convergence = Set()
@@ -138,16 +150,14 @@ for time in sorted(all_times):
   if converged:
     convergence_time = int(time) - time_zero
     if not already_converged:
-      time_with_convergence.add(convergence_time)
+      closest = closest_time(all_times_, convergence_time)
+      time_with_convergence.add(closest)
 
     already_converged = True
   else:
     already_converged = False
 
-
-all_times = subtract_time_zero(all_times, time_zero)
-all_times = sorted(all_times)
-
+all_times = all_times_
 # process time_to_bytes
 time_to_delta_bytes = {}
 time_to_ack_bytes = {}
@@ -155,6 +165,7 @@ time_to_id_bytes = {}
 
 for key, value in time_to_bytes.iteritems():
   time = int(key) - time_zero
+  time = closest_time(all_times, time)
   delta_bytes = 0
   ack_bytes = 0
   id_bytes = 0
@@ -251,7 +262,8 @@ chart.add("Acks", ack_bytes_list)
 #chart.add("IDs", id_bytes_list)
 chart.add("Convergence", convergence_list)
 chart.add("Update", updates_list)
-chart.render_to_png(analysis_dir + code_name + ".png")
+if PNG:
+  chart.render_to_png(analysis_dir + code_name + ".png")
 #chart.render_in_browser()
 
 
@@ -303,7 +315,8 @@ l_chart.title = "Load distribution: " + title
 for (label, count) in min_range_list:
   l_chart.add(label, count)
 l_chart.y_labels = range(0, max(counts) + 2)
-l_chart.render_to_png(analysis_dir + code_name + "_load.png")
+if PNG:
+  l_chart.render_to_png(analysis_dir + code_name + "_load.png")
 #l_chart.render_in_browser()
 
 
@@ -318,5 +331,6 @@ output['updates'] = updates_list
 output['load'] = replica_to_load.values()
 
 with open(analysis_dir + code_name + ".json", 'w') as output_file:
-  json.dump(output, output_file)
+  if JSON:
+    json.dump(output, output_file)
  

@@ -7,7 +7,8 @@ from os.path import isfile, join
 from sets import Set
 import json
 
-MAX_Y = {'delta' : 30000, 'state' : 100000}
+MAX_X = 500
+MAX_Y = {'delta' : 70000, 'state' : 70000}
 WIDTH = 1600
 
 def get_title(analyse_key):
@@ -37,10 +38,16 @@ def lol_average(lol):
 
   for t in range(len(lol[0])):
     sum = 0
-    for c in range(len(lol)):
-      sum += lol[c][t]
+    count = 0
 
-    average = sum / len(lol)
+    for c in range(len(lol)):
+      if t < len(lol[c]):
+        sum += lol[c][t]
+        count += 1
+      else:
+        print "weird"
+
+    average = sum / count
     result.append(average)
 
   return result
@@ -67,7 +74,11 @@ def do_average(average_dir, analyse_key, analysis):
   if analyse_key == "":
     return
 
-  all_times = Set()
+  all_times = []
+  for i in range(0, MAX_X/5 + 1):
+    all_times.append(i * 5)
+
+  #all_times = Set()
   all_bytes = []
   all_convergences = []
   all_updates = []
@@ -93,7 +104,7 @@ def do_average(average_dir, analyse_key, analysis):
 
       bytes[time] = {'deltas' : deltas, 'acks' : acks}
 
-    all_times.update(analyse['times'])
+    #all_times.update(analyse['times'])
     all_bytes.append(bytes)
     all_convergences.append(convergence_list)
     all_updates.append(updates_list)
@@ -101,7 +112,7 @@ def do_average(average_dir, analyse_key, analysis):
 
   # sort times
   size = len(all_bytes)
-  all_times = sorted(all_times)
+  #all_times = sorted(all_times)
 
   # do average of convergence and updates
   convergences = lol_average(all_convergences)

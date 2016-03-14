@@ -5,9 +5,9 @@ from os import system
 
 system("rm -f analyse-all.sh")
 
-executions_per_config = 42
+executions_per_config = 30
 gossip_sleep_time = 5
-rounds_of_updates = 3
+rounds_of_updates = 10
 
 log_dir = "log/"
 cmd_dir = "cmd/"
@@ -19,7 +19,7 @@ analysis_dir = "analysis/"
 e_config = {}
 e_config['tag'] = "e"
 e_config['file'] = "topology_config/erdos_renyi.cfg"
-e_config['fanouts'] = [-1, 1, 2, 3]
+e_config['fanouts'] = [-1, 1, 2]
 
 # ring
 r_config = {}
@@ -68,7 +68,7 @@ for execution in range(executions_per_config):
 
         print "echo \"./analyse.sh " + log + " " + analysis_dir + "\" >> analyse-all.sh"
   
-  print "sleep 9m"      
+  print "sleep 20m"
   print "./stop-replicas.sh"
 
 print "chmod u+x analyse-all.sh"
